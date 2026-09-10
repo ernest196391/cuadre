@@ -2,26 +2,108 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Paleta neutra del producto. La marca del operador la sobreescribe en
+   tiempo de ejecución desde su fila en `tenants`: aquí no hay marca de nadie. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --marca: #1f1b1d;
+  --acento: #6b7280;
+  --fondo: #f7f7f6;
+  --tarjeta: #ffffff;
+  --texto: #18181b;
+  --texto-suave: #6b6b70;
+  --linea: rgba(24, 24, 27, 0.12);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  /* Se usa desde la calle, con una mano: nada de rebote horizontal. */
+  overflow-x: hidden;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+/* Todo lo que se toca llega a 44px. Se usa a diario, de pie, con prisa. */
+input,
+select,
+textarea,
+button,
+a.boton {
+  min-height: 44px;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1.5px solid var(--linea);
+  border-radius: 12px;
+  background: var(--tarjeta);
+  padding: 11px 14px;
+  /* 16px evita que iOS haga zoom al enfocar el campo. */
+  font-size: 16px;
+  color: var(--texto);
+}
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--marca);
+}
+
+.mono {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+.tarjeta {
+  background: var(--tarjeta);
+  border: 1px solid var(--linea);
+  border-radius: 16px;
+}
+
+.boton-primario {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  background: var(--marca);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.boton-primario:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.boton-secundario {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1.5px solid var(--linea);
+  border-radius: 12px;
+  background: var(--tarjeta);
+  color: var(--texto);
+  font-size: 15px;
+  font-weight: 600;
+  padding: 0 16px;
+  cursor: pointer;
+}
+
+.etiqueta {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--texto-suave);
+  margin-bottom: 6px;
 }
