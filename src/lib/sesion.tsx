@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
-import { supabase } from "./supabase/client";
+import { hayConfiguracion, supabase } from "./supabase/client";
 
 export interface Tenant {
   id: string;
@@ -65,9 +65,9 @@ export function SesionProvider({ children }: { children: React.ReactNode }) {
   });
 
   const cargar = useCallback(async () => {
-    const sb = supabase();
     setEstado((e) => ({ ...e, cargando: true, error: null }));
     try {
+      const sb = supabase();
       const { data: auth } = await conTimeout(sb.auth.getUser());
       if (!auth.user) {
         setEstado({ cargando: false, error: null, usuario: null, perfil: null, tenant: null, metodos: [] });
@@ -126,6 +126,7 @@ export function SesionProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     cargar();
+    if (!hayConfiguracion()) return;
     const { data: sub } = supabase().auth.onAuthStateChange((evento) => {
       if (evento === "SIGNED_IN" || evento === "SIGNED_OUT") cargar();
     });

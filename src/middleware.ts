@@ -8,6 +8,13 @@ import { NextResponse, type NextRequest } from "next/server";
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
 
+  // Sin configuración no hay sesión que refrescar. Se sigue de largo en vez de
+  // reventar en cada petición: un despliegue al que todavía no le han puesto
+  // las variables debe enseñar su pantalla de error, no un 500 sin explicación.
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return response;
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

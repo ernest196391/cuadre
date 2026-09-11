@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase/client";
+import { hayConfiguracion, supabase } from "@/lib/supabase/client";
 import { useSesion } from "@/lib/sesion";
 
 export default function LoginPage() {
@@ -19,6 +19,10 @@ export default function LoginPage() {
 
   async function entrar(e: FormEvent) {
     e.preventDefault();
+    if (!hayConfiguracion()) {
+      setError("Este despliegue todavía no tiene configurada la conexión con la base de datos.");
+      return;
+    }
     setEntrando(true);
     setError(null);
     const { error: err } = await supabase().auth.signInWithPassword({
