@@ -186,12 +186,9 @@ export default function ReportesPage() {
             />
           </div>
 
-          <h2 className="mb-1 text-sm font-semibold" style={{ color: "var(--texto-suave)" }}>
+          <h2 className="mb-2 text-sm font-semibold" style={{ color: "var(--texto-suave)" }}>
             Por método
           </h2>
-          <p className="mb-2 text-xs" style={{ color: "var(--texto-suave)" }}>
-            Lo que deja cada envío y lo que deja acumulado: no siempre gana el mismo.
-          </p>
           <ul className="mb-5 flex flex-col gap-2">
             {metodosOrdenados.map((g) => (
               <li key={g.clave} className="tarjeta p-4">
@@ -212,12 +209,9 @@ export default function ReportesPage() {
             ))}
           </ul>
 
-          <h2 className="mb-1 text-sm font-semibold" style={{ color: "var(--texto-suave)" }}>
+          <h2 className="mb-2 text-sm font-semibold" style={{ color: "var(--texto-suave)" }}>
             Por responsable
           </h2>
-          <p className="mb-2 text-xs" style={{ color: "var(--texto-suave)" }}>
-            La ganancia ya lleva su comisión descontada.
-          </p>
           <ul className="flex flex-col gap-2">
             {responsables.map((g) => (
               <li key={g.clave} className="tarjeta flex items-center justify-between gap-3 p-4">

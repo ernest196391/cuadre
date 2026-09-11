@@ -18,27 +18,45 @@ interface EntregaReciente {
 }
 
 export default function HoyPage() {
-  const { tenant } = useSesion();
+  const { tenant, metodos } = useSesion();
   const [entregas, setEntregas] = useState<EntregaReciente[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [saldoUsdt, setSaldoUsdt] = useState<number | null>(null);
 
   const cargar = useCallback(async () => {
     setCargando(true);
     setError(null);
     try {
+      const sb = supabase();
       const desde = new Date();
       desde.setHours(0, 0, 0, 0);
-      const { data, error: err } = await supabase()
-        .from("deliveries")
-        .select(
-          "id, delivered_at, source_amount_received, delivered_amount, delivered_currency, usdt_spent, contacts:client_contact_id(full_name), delivery_methods:method_id(label)"
-        )
-        .is("voided_at", null)
-        .gte("delivered_at", desde.toISOString())
-        .order("delivered_at", { ascending: false });
-      if (err) throw err;
-      setEntregas((data ?? []) as unknown as EntregaReciente[]);
+
+      const [hoyRes, compradoRes, gastadoRes] = await Promise.all([
+        sb.from("deliveries")
+          .select(
+            "id, delivered_at, source_amount_received, delivered_amount, delivered_currency, usdt_spent, contacts:client_contact_id(full_name), delivery_methods:method_id(label)"
+          )
+          .is("voided_at", null)
+          .gte("delivered_at", desde.toISOString())
+          .order("delivered_at", { ascending: false }),
+        // Saldo de la wallet: es lo primero que se mira antes de aceptar un
+        // envío grande, y hasta ahora había que calcularlo de cabeza.
+        sb.from("purchases").select("usdt_received").is("voided_at", null),
+        sb.from("deliveries").select("usdt_spent, network_fee_usdt").is("voided_at", null),
+      ]);
+      if (hoyRes.error) throw hoyRes.error;
+      setEntregas((hoyRes.data ?? []) as unknown as EntregaReciente[]);
+
+      if (!compradoRes.error && !gastadoRes.error) {
+        const comprado = (compradoRes.data ?? []).reduce((s, c) => s + Number(c.usdt_received), 0);
+        const gastado = (gastadoRes.data ?? []).reduce(
+          (s, d) => s + Number(d.usdt_spent) + Number(d.network_fee_usdt),
+          0
+        );
+        setSaldoUsdt(comprado - gastado);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo cargar el día.");
     } finally {
@@ -74,11 +92,37 @@ export default function HoyPage() {
         </Link>
       </div>
 
-      <div className="tarjeta mb-5 grid grid-cols-3 divide-x" style={{ borderColor: "var(--linea)" }}>
+      {saldoUsdt !== null && (
+        <div
+          className="mb-3 rounded-2xl px-5 py-4"
+          style={{ background: "var(--marca)", color: "#fff" }}
+        >
+          <p className="mb-1 text-xs opacity-85">Te queda en la wallet</p>
+          <p className="mono text-2xl font-semibold">{formatearUsdt(saldoUsdt)} USDT</p>
+        </div>
+      )}
+
+      <div className="tarjeta mb-3 grid grid-cols-3 divide-x" style={{ borderColor: "var(--linea)" }}>
         <Resumen titulo="Entregas" valor={String(entregas.length)} />
         <Resumen titulo={`Recibido ${moneda}`} valor={formatearMonto(totalOrigen, moneda)} />
-        <Resumen titulo="USDT usados" valor={formatearUsdt(totalUsdt)} />
+        <Resumen titulo="USDT entregados" valor={formatearUsdt(totalUsdt)} />
       </div>
+
+      <Link
+        href="/metodos"
+        className="tarjeta mb-5 flex items-center justify-between gap-3 px-4"
+        style={{ minHeight: 56 }}
+      >
+        <div className="min-w-0">
+          <p className="text-[15px] font-medium">Tasas</p>
+          <p className="truncate text-xs" style={{ color: "var(--texto-suave)" }}>
+            {metodos.filter((m) => m.active).length} métodos activos
+          </p>
+        </div>
+        <span className="text-sm" style={{ color: "var(--texto-suave)" }}>
+          ›
+        </span>
+      </Link>
 
       <h2 className="mb-2 text-sm font-semibold" style={{ color: "var(--texto-suave)" }}>
         Entregas de hoy

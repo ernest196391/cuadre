@@ -325,7 +325,7 @@ export default function ContactoPage({ params }: { params: { id: string } }) {
               required
             />
             <p className="mt-1.5 text-xs" style={{ color: "var(--texto-suave)" }}>
-              Se cifra en el servidor. En las listas solo se ven los últimos 4.
+              Solo se verán los últimos 4 dígitos.
             </p>
           </div>
           <button className="boton-primario" type="submit" disabled={guardandoCuenta}>

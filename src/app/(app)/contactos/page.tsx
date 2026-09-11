@@ -142,7 +142,7 @@ export default function ContactosPage() {
             />
           </div>
           <div>
-            <label className="etiqueta">Qué es (puede ser varias cosas)</label>
+            <label className="etiqueta">Etiquetas</label>
             <div className="flex flex-wrap gap-2">
               {ROLES.map((r) => {
                 const activo = roles.includes(r.valor);

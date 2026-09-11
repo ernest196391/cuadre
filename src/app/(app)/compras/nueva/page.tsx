@@ -88,10 +88,7 @@ export default function NuevaCompraPage() {
 
   return (
     <>
-      <h1 className="mb-1 text-xl font-semibold">Registrar compra de USDT</h1>
-      <p className="mb-4 text-sm" style={{ color: "var(--texto-suave)" }}>
-        El costo real por USDT lo calcula la app. No hay campo para escribirlo.
-      </p>
+      <h1 className="mb-4 text-xl font-semibold">Registrar compra de USDT</h1>
 
       <form onSubmit={guardar} className="flex flex-col gap-4">
         <CampoMonto
@@ -110,7 +107,7 @@ export default function NuevaCompraPage() {
           valor={usdt}
           onValor={setUsdt}
           decimal
-          ayuda="Lo que llegó de verdad, ya con el fee descontado."
+          ayuda="Los que llegaron, ya con el fee descontado."
         />
 
         <CampoMonto

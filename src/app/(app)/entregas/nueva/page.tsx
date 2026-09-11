@@ -64,6 +64,31 @@ export default function NuevaEntregaPage() {
 
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorCliente, setErrorCliente] = useState<string | null>(null);
+
+  /**
+   * Dar de alta al cliente sin salir de aquí. Obligar a abandonar una entrega a
+   * medias para ir a Contactos es lo que hace que la entrega no se registre.
+   */
+  async function crearClienteAlVuelo(nombre: string) {
+    if (!tenant || !perfil) return;
+    setErrorCliente(null);
+    const sb = supabase();
+    const { data, error: err } = await sb
+      .from("contacts")
+      .insert({ tenant_id: tenant.id, full_name: nombre, created_by: perfil.id })
+      .select("id, full_name, phone")
+      .single();
+
+    if (err || !data) {
+      setErrorCliente("No se pudo crear el contacto. " + (err?.message ?? ""));
+      return;
+    }
+    await sb.from("contact_roles").insert({ contact_id: data.id, role: "client" });
+    const nuevo = data as ContactoBreve;
+    setClientes((prev) => [...prev, nuevo].sort((a, b) => a.full_name.localeCompare(b.full_name)));
+    setCliente(nuevo);
+  }
 
   const cargarListas = useCallback(async () => {
     const sb = supabase();
@@ -169,7 +194,7 @@ export default function NuevaEntregaPage() {
     if (!metodo) return "Elige un método de entrega.";
     if (montoRecibido <= 0) return "Escribe cuánto recibiste.";
     if (montoEntregado <= 0) return "El monto entregado tiene que ser mayor que cero.";
-    if (parsearNumero(usdt) <= 0) return "Escribe cuántos USDT usaste.";
+    if (parsearNumero(usdt) <= 0) return "Escribe cuántos USDT entregaste.";
     if (!responsableId) return "Elige quién atendió la entrega.";
     return null;
   }
@@ -278,7 +303,7 @@ export default function NuevaEntregaPage() {
 
         <CampoMonto
           id="entregado"
-          etiqueta="Monto entregado (si negociaste, corrígelo)"
+          etiqueta="Monto entregado"
           sufijo={metodo?.target_currency}
           valor={entregadoTocado ? entregado : sugerido > 0 && metodo ? formatearMonto(sugerido, metodo.target_currency) : ""}
           onValor={(v) => {
@@ -289,18 +314,18 @@ export default function NuevaEntregaPage() {
           ayuda={
             negociado
               ? `Tasa que estás aplicando: ${tasaLegible(tasaAplicada, metodo!.target_currency, monedaOrigen)}`
-              : "Sale de la tasa del método. Cámbialo solo si negociaste."
+              : "Cámbialo solo si negociaste otra tasa."
           }
         />
 
         <CampoMonto
           id="usdt"
-          etiqueta="USDT puestos en Cuba"
+          etiqueta="USDT entregados"
           sufijo="USDT"
           valor={usdt}
           onValor={setUsdt}
           decimal
-          ayuda="Lo que llegó a destino. El fee de la wallet va aparte, en Más detalles."
+          ayuda="Los que llegaron a destino. El fee de la wallet va aparte."
         />
 
         <SelectorContacto
@@ -308,7 +333,13 @@ export default function NuevaEntregaPage() {
           contactos={clientes}
           seleccionado={cliente}
           onSeleccionar={setCliente}
+          onCrear={crearClienteAlVuelo}
         />
+        {errorCliente && (
+          <p className="-mt-2 text-sm" style={{ color: "#b3261e" }}>
+            {errorCliente}
+          </p>
+        )}
 
         {cuentas.length > 0 && (
           <div>
@@ -361,8 +392,8 @@ export default function NuevaEntregaPage() {
                     <span className="truncate text-[15px] font-semibold">{t.full_name}</span>
                     <span className="mono text-xs" style={{ color: "var(--texto-suave)" }}>
                       {suya.monto > 0
-                        ? `−${formatearMonto(suya.monto, suya.moneda)} ${suya.moneda}`
-                        : "no cobra"}
+                        ? `comisión ${formatearMonto(suya.monto, suya.moneda)} ${suya.moneda}`
+                        : "sin comisión"}
                     </span>
                   </button>
                 );
@@ -394,7 +425,6 @@ export default function NuevaEntregaPage() {
               valor={feeRed}
               onValor={setFeeRed}
               decimal
-              ayuda="Este es el que mueve el margen de esta operación."
             />
 
             <div>
