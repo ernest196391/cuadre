@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import { useSesion } from "@/lib/sesion";
 import { formatearFechaHora } from "@/lib/format";
@@ -100,6 +101,19 @@ export default function AjustesPage() {
         Una clave deja que tu web mande pedidos aquí. Funciona con cualquier sitio; el contrato está
         en el README del proyecto.
       </p>
+
+      {/* El aviso de Hoy solo sale si hay pendientes: sin esto, atendidos todos,
+          no habría forma de volver a mirar lo que llegó. */}
+      <Link
+        href="/pedidos"
+        className="tarjeta mb-4 flex items-center justify-between gap-3 px-4"
+        style={{ minHeight: 56 }}
+      >
+        <span className="text-[15px] font-medium">Ver los pedidos recibidos</span>
+        <span className="text-sm" style={{ color: "var(--texto-suave)" }}>
+          ›
+        </span>
+      </Link>
 
       {nueva && (
         <div
