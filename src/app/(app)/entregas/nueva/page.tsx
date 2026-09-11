@@ -10,6 +10,7 @@ import { redondearTasa, tasaLegible } from "@/lib/tasas";
 import CampoMonto from "@/components/CampoMonto";
 import SelectorContacto, { type ContactoBreve } from "@/components/SelectorContacto";
 import { comisionDe, formatearUsd, porcentajeDe, valorEnUsd, type ReglaPersona } from "@/lib/comisiones";
+import { tomarParaRepetir } from "@/lib/repetir";
 
 interface CuentaBreve {
   id: string;
@@ -121,6 +122,61 @@ export default function NuevaEntregaPage() {
   useEffect(() => {
     cargarListas();
   }, [cargarListas]);
+
+  /**
+   * Si viene de anular una entrega, llega con todo puesto menos lo que hay que
+   * corregir. Volver a teclearlo de memoria es justo donde se cuela el segundo
+   * error, que es el que ya nadie revisa.
+   */
+  const [repetida, setRepetida] = useState(false);
+  const [clientePendiente, setClientePendiente] = useState<string | null>(null);
+  const [entregadoPendiente, setEntregadoPendiente] = useState<string | null>(null);
+  useEffect(() => {
+    const r = tomarParaRepetir();
+    if (!r) return;
+    setRepetida(true);
+    if (r.metodoId) setMetodoId(r.metodoId);
+    if (r.recibido) setRecibido(r.recibido);
+    if (r.responsableId) setResponsableId(r.responsableId);
+    if (r.origenId) setOrigenId(r.origenId);
+    if (r.notas) {
+      setNotas(r.notas);
+      setMasDetalles(true);
+    }
+    if (r.clienteId) setClientePendiente(r.clienteId);
+    // El monto entregado se decide abajo, cuando ya se sabe la tasa. NO se fija
+    // aquí: dejarlo "tocado" congela el número, y entonces corregir lo recibido
+    // ya no lo recalcula — que es exactamente el error que se venía a arreglar.
+    if (r.entregado) setEntregadoPendiente(r.entregado);
+    // Los USDT no se arrastran nunca: son los que se van a mover ahora, y salen
+    // del precio de mercado de hoy, no del de la entrega vieja.
+  }, []);
+
+  /**
+   * Solo se respeta el monto entregado de la entrega vieja si estaba negociado,
+   * es decir, si no salía de la tasa. Si salía de la tasa, se deja que se
+   * recalcule solo con lo que se corrija.
+   */
+  useEffect(() => {
+    if (entregadoPendiente === null) return;
+    const m = activos.find((x) => x.id === metodoId);
+    if (!m) return;
+    const viejo = parsearNumero(entregadoPendiente);
+    const deLaTasa = redondearMonto(parsearNumero(recibido) * m.rate, m.target_currency);
+    if (viejo > 0 && Math.abs(viejo - deLaTasa) > 0.005) {
+      setEntregadoTocado(true);
+      setEntregado(entregadoPendiente);
+    }
+    setEntregadoPendiente(null);
+  }, [entregadoPendiente, activos, metodoId, recibido]);
+
+  // El cliente se ata cuando la lista ya llegó, no antes.
+  useEffect(() => {
+    if (!clientePendiente || clientes.length === 0) return;
+    const c = clientes.find((x) => x.id === clientePendiente);
+    if (c) setCliente(c);
+    setClientePendiente(null);
+  }, [clientePendiente, clientes]);
 
   // Preselección: lo último que usó, si sigue existiendo.
   useEffect(() => {
@@ -268,6 +324,16 @@ export default function NuevaEntregaPage() {
   return (
     <>
       <h1 className="mb-4 text-xl font-semibold">Registrar entrega</h1>
+
+      {repetida && (
+        <p
+          className="mb-4 rounded-xl px-4 py-3 text-sm"
+          style={{ background: "rgba(36,107,206,.08)", color: "#246BCE" }}
+          role="status"
+        >
+          Están los datos de la entrega que anulaste. Corrige lo que estaba mal y guárdala.
+        </p>
+      )}
 
       <form onSubmit={guardar} className="flex flex-col gap-4">
         <CampoMonto

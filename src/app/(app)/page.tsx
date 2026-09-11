@@ -24,6 +24,7 @@ export default function HoyPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [saldoUsdt, setSaldoUsdt] = useState<number | null>(null);
+  const [pedidosPendientes, setPedidosPendientes] = useState(0);
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -33,7 +34,7 @@ export default function HoyPage() {
       const desde = new Date();
       desde.setHours(0, 0, 0, 0);
 
-      const [hoyRes, compradoRes, gastadoRes] = await Promise.all([
+      const [hoyRes, compradoRes, gastadoRes, pedidosRes] = await Promise.all([
         sb.from("deliveries")
           .select(
             "id, delivered_at, source_amount_received, delivered_amount, delivered_currency, usdt_spent, contacts:client_contact_id(full_name), delivery_methods:method_id(label)"
@@ -45,9 +46,13 @@ export default function HoyPage() {
         // envío grande, y hasta ahora había que calcularlo de cabeza.
         sb.from("purchases").select("usdt_received").is("voided_at", null),
         sb.from("deliveries").select("usdt_spent, network_fee_usdt").is("voided_at", null),
+        // Pedidos de la web sin atender. Si no se avisan aquí, nadie entra a
+        // mirarlos y el cliente se queda esperando.
+        sb.from("inbound_orders").select("id").is("processed_at", null),
       ]);
       if (hoyRes.error) throw hoyRes.error;
       setEntregas((hoyRes.data ?? []) as unknown as EntregaReciente[]);
+      if (!pedidosRes.error) setPedidosPendientes((pedidosRes.data ?? []).length);
 
       if (!compradoRes.error && !gastadoRes.error) {
         const comprado = (compradoRes.data ?? []).reduce((s, c) => s + Number(c.usdt_received), 0);
@@ -93,13 +98,19 @@ export default function HoyPage() {
       </div>
 
       {saldoUsdt !== null && (
-        <div
-          className="mb-3 rounded-2xl px-5 py-4"
+        // Lleva a Compras: mirar el saldo y preguntarse de dónde salió es el
+        // mismo gesto.
+        <Link
+          href="/compras"
+          className="mb-3 flex items-center justify-between gap-3 rounded-2xl px-5 py-4"
           style={{ background: "var(--marca)", color: "#fff" }}
         >
-          <p className="mb-1 text-xs opacity-85">Te queda en la wallet</p>
-          <p className="mono text-2xl font-semibold">{formatearUsdt(saldoUsdt)} USDT</p>
-        </div>
+          <div>
+            <p className="mb-1 text-xs opacity-85">Te queda en la wallet</p>
+            <p className="mono text-2xl font-semibold">{formatearUsdt(saldoUsdt)} USDT</p>
+          </div>
+          <span className="shrink-0 text-sm opacity-85">›</span>
+        </Link>
       )}
 
       <div className="tarjeta mb-3 grid grid-cols-3 divide-x" style={{ borderColor: "var(--linea)" }}>
@@ -107,6 +118,26 @@ export default function HoyPage() {
         <Resumen titulo={`Recibido ${moneda}`} valor={formatearMonto(totalOrigen, moneda)} />
         <Resumen titulo="USDT entregados" valor={formatearUsdt(totalUsdt)} />
       </div>
+
+      {pedidosPendientes > 0 && (
+        <Link
+          href="/pedidos"
+          className="mb-3 flex items-center justify-between gap-3 rounded-2xl px-4 py-3"
+          style={{ background: "rgba(36,107,206,.08)", border: "1.5px solid rgba(36,107,206,.35)", minHeight: 56 }}
+        >
+          <div className="min-w-0">
+            <p className="text-[15px] font-semibold" style={{ color: "#246BCE" }}>
+              {pedidosPendientes} {pedidosPendientes === 1 ? "pedido" : "pedidos"} de la web sin atender
+            </p>
+            <p className="text-xs" style={{ color: "var(--texto-suave)" }}>
+              Tócalo para verlos y registrarlos.
+            </p>
+          </div>
+          <span className="shrink-0 text-sm" style={{ color: "#246BCE" }}>
+            ›
+          </span>
+        </Link>
+      )}
 
       <Link
         href="/metodos"
@@ -124,9 +155,15 @@ export default function HoyPage() {
         </span>
       </Link>
 
-      <h2 className="mb-2 text-sm font-semibold" style={{ color: "var(--texto-suave)" }}>
-        Entregas de hoy
-      </h2>
+      <div className="mb-2 flex items-baseline justify-between gap-3">
+        <h2 className="text-sm font-semibold" style={{ color: "var(--texto-suave)" }}>
+          Entregas de hoy
+        </h2>
+        <Link href="/entregas" className="flex items-center text-sm font-medium"
+              style={{ color: "var(--marca)", minHeight: 44 }}>
+          Ver todas
+        </Link>
+      </div>
 
       {cargando ? (
         <p className="py-6 text-center text-sm" style={{ color: "var(--texto-suave)" }}>
@@ -151,21 +188,29 @@ export default function HoyPage() {
       ) : (
         <ul className="flex flex-col gap-2">
           {entregas.map((e) => (
-            <li key={e.id} className="tarjeta flex items-center justify-between gap-3 p-4">
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium">{e.contacts?.full_name ?? "Sin cliente"}</p>
-                <p className="truncate text-xs" style={{ color: "var(--texto-suave)" }}>
-                  {e.delivery_methods?.label ?? "—"} · {formatearFechaHora(e.delivered_at)}
-                </p>
-              </div>
-              <div className="shrink-0 text-right">
-                <p className="mono text-sm font-semibold">
-                  {formatearMonto(Number(e.delivered_amount), e.delivered_currency)} {e.delivered_currency}
-                </p>
-                <p className="mono text-xs" style={{ color: "var(--texto-suave)" }}>
-                  {formatearMonto(Number(e.source_amount_received), moneda)} {moneda}
-                </p>
-              </div>
+            <li key={e.id}>
+              {/* Se toca para abrirla: un dedazo en el monto tiene que poder
+                  corregirse, y el sitio donde uno lo busca es la propia fila. */}
+              <Link
+                href={`/entregas/${e.id}`}
+                className="tarjeta flex items-center justify-between gap-3 p-4"
+                style={{ minHeight: 56 }}
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">{e.contacts?.full_name ?? "Sin cliente"}</p>
+                  <p className="truncate text-xs" style={{ color: "var(--texto-suave)" }}>
+                    {e.delivery_methods?.label ?? "—"} · {formatearFechaHora(e.delivered_at)}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="mono text-sm font-semibold">
+                    {formatearMonto(Number(e.delivered_amount), e.delivered_currency)} {e.delivered_currency}
+                  </p>
+                  <p className="mono text-xs" style={{ color: "var(--texto-suave)" }}>
+                    {formatearMonto(Number(e.source_amount_received), moneda)} {moneda}
+                  </p>
+                </div>
+              </Link>
             </li>
           ))}
         </ul>

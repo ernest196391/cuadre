@@ -22,6 +22,7 @@ export default function ReportesPage() {
   const [nombres, setNombres] = useState<Record<string, string>>({});
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [compartido, setCompartido] = useState(false);
 
   const rango = useMemo(() => {
     const ancla = new Date();
@@ -83,6 +84,45 @@ export default function ReportesPage() {
           rango.fin.getTime() - 1
         ).toLocaleDateString("es", { day: "2-digit", month: "short" })}`
       : rango.inicio.toLocaleDateString("es", { month: "long", year: "numeric" });
+
+  /**
+   * Mandarle el resumen a alguien por WhatsApp. En el teléfono sale el menú de
+   * compartir del sistema; si no lo hay (o lo cancela), se copia al portapapeles,
+   * que es lo que se acaba haciendo a mano igualmente.
+   */
+  async function compartir() {
+    const l = (t: string, v: string) => `${t}: ${v} ${moneda}`;
+    const texto = [
+      `${tenant?.brand_name ?? "Cuentas"} · ${etiquetaRango}`,
+      "",
+      `${totales.entregas} ${totales.entregas === 1 ? "entrega" : "entregas"}`,
+      l("Recibido de clientes", formatearMonto(totales.ingreso, moneda)),
+      l("Costo del USDT", `−${formatearMonto(totales.costoUsdt, moneda)}`),
+      l("Comisiones", `−${formatearMonto(totales.comisiones, moneda)}`),
+      ...(totales.mensajeria > 0 ? [l("Mensajería", `−${formatearMonto(totales.mensajeria, moneda)}`)] : []),
+      "",
+      l("GANANCIA", formatearMonto(totales.ganancia, moneda)),
+      ...(totales.margen !== null
+        ? [`Margen: ${totales.margen.toLocaleString("es", { maximumFractionDigits: 1 })}%`]
+        : []),
+    ].join("\n");
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ text: texto });
+        return;
+      }
+    } catch {
+      /* lo canceló o el navegador no dejó: se copia */
+    }
+    try {
+      await navigator.clipboard.writeText(texto);
+      setCompartido(true);
+      setTimeout(() => setCompartido(false), 1800);
+    } catch {
+      /* portapapeles no disponible */
+    }
+  }
 
   return (
     <>
@@ -156,6 +196,10 @@ export default function ReportesPage() {
         </div>
       ) : (
         <>
+          <button className="boton-secundario mb-3 w-full justify-center" type="button" onClick={compartir}>
+            {compartido ? "¡Copiado!" : "Compartir el resumen"}
+          </button>
+
           <div className="mb-4 rounded-2xl px-5 py-5" style={{ background: "var(--marca)", color: "#fff" }}>
             <p className="mb-1 text-xs opacity-80">Ganancia neta</p>
             <p className="mono mb-1 text-3xl font-semibold">

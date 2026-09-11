@@ -5,6 +5,8 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import { useSesion } from "@/lib/sesion";
 import { useEnvioUnico } from "@/lib/envioUnico";
+import EditarContacto from "@/components/EditarContacto";
+import EditarCuenta from "@/components/EditarCuenta";
 import { formatearFecha, formatearMonto } from "@/lib/format";
 
 interface Contacto {
@@ -12,6 +14,7 @@ interface Contacto {
   full_name: string;
   phone: string | null;
   notes: string | null;
+  active: boolean;
 }
 
 interface Cuenta {
@@ -53,6 +56,9 @@ export default function ContactoPage({ params }: { params: { id: string } }) {
   const [copiadoCuenta, setCopiadoCuenta] = useState<string | null>(null);
 
   const envioCuenta = useEnvioUnico();
+  const [editandoContacto, setEditandoContacto] = useState(false);
+  const [copiadoTel, setCopiadoTel] = useState(false);
+  const [editandoCuenta, setEditandoCuenta] = useState<string | null>(null);
   const [formCuenta, setFormCuenta] = useState(false);
   const [alias, setAlias] = useState("");
   const [titular, setTitular] = useState("");
@@ -67,7 +73,7 @@ export default function ContactoPage({ params }: { params: { id: string } }) {
     try {
       const sb = supabase();
       const [cRes, aRes, eRes] = await Promise.all([
-        sb.from("contacts").select("id, full_name, phone, notes").eq("id", params.id).single(),
+        sb.from("contacts").select("id, full_name, phone, notes, active").eq("id", params.id).single(),
         sb
           .from("destination_accounts_safe")
           .select("id, alias, holder_name, bank, account_type, pan_last4")
@@ -235,11 +241,62 @@ export default function ContactoPage({ params }: { params: { id: string } }) {
       >
         ‹ Contactos
       </Link>
-      <h1 className="mb-1 text-xl font-semibold">{contacto.full_name}</h1>
-      {contacto.phone && (
-        <p className="mono mb-4 text-sm" style={{ color: "var(--texto-suave)" }}>
-          {contacto.phone}
+      <div className="mb-1 flex items-start justify-between gap-3">
+        <h1 className="min-w-0 text-xl font-semibold">{contacto.full_name}</h1>
+        {!editandoContacto && (
+          <button
+            className="shrink-0 text-sm font-medium"
+            type="button"
+            onClick={() => setEditandoContacto(true)}
+            style={{ color: "var(--marca)", minHeight: 44 }}
+          >
+            Editar
+          </button>
+        )}
+      </div>
+
+      {contacto.phone && !editandoContacto && (
+        <div className="mb-4 flex items-center gap-3">
+          <p className="mono text-sm" style={{ color: "var(--texto-suave)" }}>
+            {contacto.phone}
+          </p>
+          <button
+            className="text-xs font-medium"
+            type="button"
+            style={{ color: "var(--marca)", minHeight: 44 }}
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(contacto.phone ?? "");
+                setCopiadoTel(true);
+                setTimeout(() => setCopiadoTel(false), 1800);
+              } catch {
+                /* portapapeles no disponible */
+              }
+            }}
+          >
+            {copiadoTel ? "¡Copiado!" : "Copiar"}
+          </button>
+        </div>
+      )}
+
+      {!contacto.active && !editandoContacto && (
+        <p
+          className="mb-4 rounded-xl px-4 py-3 text-sm"
+          style={{ background: "rgba(187,107,0,.1)", color: "#BB6B00" }}
+        >
+          Dado de baja. No sale al elegir cliente ni trabajador.
         </p>
+      )}
+
+      {editandoContacto && (
+        <EditarContacto
+          contacto={contacto}
+          onCerrar={() => setEditandoContacto(false)}
+          onGuardado={() => {
+            setEditandoContacto(false);
+            cargar();
+          }}
+        />
       )}
 
       <div className="mb-6 grid grid-cols-2 gap-2">
@@ -354,7 +411,19 @@ export default function ContactoPage({ params }: { params: { id: string } }) {
         <ul className="mb-6 flex flex-col gap-2">
           {cuentas.map((c) => (
             <li key={c.id} className="tarjeta p-4">
-              <p className="text-[15px] font-medium">{c.alias}</p>
+              <div className="flex items-start justify-between gap-3">
+                <p className="min-w-0 text-[15px] font-medium">{c.alias}</p>
+                {editandoCuenta !== c.id && (
+                  <button
+                    className="shrink-0 text-sm font-medium"
+                    type="button"
+                    onClick={() => setEditandoCuenta(c.id)}
+                    style={{ color: "var(--marca)", minHeight: 44 }}
+                  >
+                    Editar
+                  </button>
+                )}
+              </div>
               <p className="mb-2 text-xs" style={{ color: "var(--texto-suave)" }}>
                 {[c.holder_name, c.bank].filter(Boolean).join(" · ") || "Sin titular"}
               </p>
@@ -407,6 +476,17 @@ export default function ContactoPage({ params }: { params: { id: string } }) {
                     {copiadoCuenta === c.id ? "¡Copiado!" : "Copiar número"}
                   </button>
                 </div>
+              )}
+
+              {editandoCuenta === c.id && (
+                <EditarCuenta
+                  cuenta={c}
+                  onCerrar={() => setEditandoCuenta(null)}
+                  onGuardado={() => {
+                    setEditandoCuenta(null);
+                    cargar();
+                  }}
+                />
               )}
             </li>
           ))}
