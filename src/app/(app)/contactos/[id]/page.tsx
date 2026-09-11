@@ -22,6 +22,9 @@ interface Cuenta {
   pan_last4: string | null;
 }
 
+/** Cuánto aguanta un número de tarjeta en pantalla antes de taparse solo. */
+const SEGUNDOS_VISIBLE = 30;
+
 interface Entrega {
   id: string;
   delivered_at: string;
@@ -42,9 +45,11 @@ export default function ContactoPage({ params }: { params: { id: string } }) {
   const [error, setError] = useState<string | null>(null);
 
   const [revelado, setRevelado] = useState<Record<string, string>>({});
+  const [segundos, setSegundos] = useState<Record<string, number>>({});
   const [revelando, setRevelando] = useState<string | null>(null);
   const [errorRevelar, setErrorRevelar] = useState<string | null>(null);
   const [copiado, setCopiado] = useState(false);
+  const [copiadoCuenta, setCopiadoCuenta] = useState<string | null>(null);
 
   const [formCuenta, setFormCuenta] = useState(false);
   const [alias, setAlias] = useState("");
@@ -90,6 +95,33 @@ export default function ContactoPage({ params }: { params: { id: string } }) {
     cargar();
   }, [cargar]);
 
+  /**
+   * El número se tapa solo. De nada sirve cifrarlo en la base si luego se queda
+   * a la vista en un teléfono, en la calle: la pantalla es el eslabón débil.
+   */
+  useEffect(() => {
+    if (Object.keys(segundos).length === 0) return;
+    const t = setInterval(() => {
+      setSegundos((prev) => {
+        const siguiente: Record<string, number> = {};
+        const agotadas: string[] = [];
+        for (const [id, s] of Object.entries(prev)) {
+          if (s <= 1) agotadas.push(id);
+          else siguiente[id] = s - 1;
+        }
+        if (agotadas.length > 0) {
+          setRevelado((r) => {
+            const copia = { ...r };
+            for (const id of agotadas) delete copia[id];
+            return copia;
+          });
+        }
+        return siguiente;
+      });
+    }, 1000);
+    return () => clearInterval(t);
+  }, [segundos]);
+
   /** El número completo se pide a propósito; no viaja al cargar la pantalla. */
   async function revelar(cuentaId: string) {
     setRevelando(cuentaId);
@@ -99,11 +131,22 @@ export default function ContactoPage({ params }: { params: { id: string } }) {
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? "No se pudo revelar.");
       setRevelado((prev) => ({ ...prev, [cuentaId]: body.pan }));
+      setSegundos((prev) => ({ ...prev, [cuentaId]: SEGUNDOS_VISIBLE }));
     } catch (err) {
       setErrorRevelar(err instanceof Error ? err.message : "No se pudo revelar.");
     } finally {
       setRevelando(null);
     }
+  }
+
+  function ocultar(cuentaId: string) {
+    const quitar = <T,>(m: Record<string, T>) => {
+      const copia = { ...m };
+      delete copia[cuentaId];
+      return copia;
+    };
+    setRevelado(quitar);
+    setSegundos(quitar);
   }
 
   async function crearCuenta(e: FormEvent) {
@@ -317,7 +360,16 @@ export default function ContactoPage({ params }: { params: { id: string } }) {
                     ? revelado[c.id].replace(/(.{4})/g, "$1 ").trim()
                     : `•••• •••• •••• ${c.pan_last4 ?? "····"}`}
                 </span>
-                {!revelado[c.id] && (
+                {revelado[c.id] ? (
+                  <button
+                    className="boton-secundario shrink-0 text-sm"
+                    style={{ minHeight: 44 }}
+                    onClick={() => ocultar(c.id)}
+                    type="button"
+                  >
+                    Ocultar {segundos[c.id] ?? 0}s
+                  </button>
+                ) : (
                   <button
                     className="boton-secundario shrink-0 text-sm"
                     style={{ minHeight: 44 }}
@@ -329,6 +381,29 @@ export default function ContactoPage({ params }: { params: { id: string } }) {
                   </button>
                 )}
               </div>
+              {revelado[c.id] && (
+                <div className="mt-2 flex items-center justify-between gap-3">
+                  <p className="text-xs" style={{ color: "var(--texto-suave)" }}>
+                    Esta consulta quedó registrada con tu nombre y la hora.
+                  </p>
+                  <button
+                    className="shrink-0 text-xs font-medium"
+                    style={{ color: "var(--marca)", minHeight: 44 }}
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(revelado[c.id]);
+                        setCopiadoCuenta(c.id);
+                        setTimeout(() => setCopiadoCuenta(null), 1800);
+                      } catch {
+                        /* portapapeles no disponible */
+                      }
+                    }}
+                  >
+                    {copiadoCuenta === c.id ? "¡Copiado!" : "Copiar número"}
+                  </button>
+                </div>
+              )}
             </li>
           ))}
         </ul>
