@@ -5,6 +5,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import { useSesion } from "@/lib/sesion";
 import { formatearMonto, formatearUsdt, formatearFechaHora } from "@/lib/format";
+import BotonInstalar from "@/components/BotonInstalar";
 
 interface EntregaReciente {
   id: string;
@@ -80,6 +81,8 @@ export default function HoyPage() {
   return (
     <>
       <h1 className="mb-4 text-xl font-semibold">Hoy</h1>
+
+      <BotonInstalar />
 
       <div className="mb-5 grid grid-cols-3 gap-2">
         <Link href="/entregas/nueva" className="boton-primario boton-primario-alto" style={{ minHeight: 64 }}>

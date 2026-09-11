@@ -1,0 +1,7 @@
+{
+  "brand": {"name":"Cuadre","concept":"Cuentas que encajan"},
+  "color": {"blue":"#2457D6","graphite":"#17202A","slate":"#4B5563","mist":"#E7EBF0","ivory":"#F8F7F3","white":"#FFFFFF","success":"#18794E","error":"#C43D4B","warning":"#B86B00","information":"#246BCE"},
+  "typography": {"brand":"IBM Plex Sans","interface":"IBM Plex Sans","numeric":"IBM Plex Mono","numericFeatures":["tabular-nums","slashed-zero"]},
+  "radius": {"small":6,"medium":10,"large":16},
+  "logo": {"clearSpace":"1x, donde x es el ancho del vacío central del símbolo","minimumDigitalWidth":24,"preferredHeaderHeight":32}
+}

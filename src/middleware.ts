@@ -37,5 +37,10 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  // El manifiesto y el service worker quedan fuera a propósito. Son archivos
+  // estáticos sin sesión que refrescar, y hacer pasar sw.js por aquí le cambia
+  // las cabeceras y puede dejarlo con un scope que no es el suyo.
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|icons/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|webmanifest)$).*)",
+  ],
 };

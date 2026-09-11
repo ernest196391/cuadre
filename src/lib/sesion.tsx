@@ -170,6 +170,14 @@ export function SesionProvider({ children }: { children: React.ReactNode }) {
 
   const salir = useCallback(async () => {
     await supabase().auth.signOut();
+    // Por si acaso. Hoy el service worker no guarda nada de usuario —está
+    // escrito con lista blanca justo para eso— pero si alguien añade algo más
+    // adelante sin fijarse, cerrar sesión lo barre igualmente.
+    try {
+      navigator.serviceWorker?.controller?.postMessage("LIMPIAR");
+    } catch {
+      /* sin service worker no hay nada que barrer */
+    }
   }, []);
 
   // Envueltas a propósito: si se pasan directas a un onClick, React les manda
