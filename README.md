@@ -109,6 +109,91 @@ unidad de la moneda origen.**
 Una convención, una fórmula. Las pantallas la muestran en la dirección en la que
 la gente la lee.
 
+## Cuentas del negocio
+
+Solo se registra y se suma: no hay proyecciones, predicciones ni gráficas.
+
+El USDT se compra en bloque, así que ninguna entrega tiene "su" compra. El
+costeo es por **promedio ponderado**: lo que cuesta un USDT es lo que costó en
+promedio todo el comprado hasta la fecha de corte del período.
+
+```
+costo del USDT   = (usdt_spent + network_fee_usdt) × promedio_ponderado
+comisión en GYD  = comisión en USDT × promedio_ponderado
+ganancia         = recibido − costo del USDT − comisiones − mensajería
+```
+
+`usdt_spent` son los USDT **que llegaron a destino**; el fee de la wallet va
+aparte en `network_fee_usdt` y cuenta como costo, porque son USDT que salieron
+y no llegaron a manos de nadie. Esa separación es también la que hace correcta
+la comisión: un 3% "por cada 100 puestos en Cuba" se aplica a lo que llegó, no
+a lo que salió.
+
+El desglose por método muestra **la ganancia por envío y la acumulada por
+separado**, porque no responden a la misma pregunta: un método puede dejar más
+en cada operación y aun así rendir menos al final del mes.
+
+## Recibir pedidos desde una web
+
+Cualquier sitio puede mandar pedidos. No hace falta que sea el nuestro.
+
+**Endpoint:** `POST https://<tu-dominio>/api/pedidos`
+
+**Cabeceras:**
+
+```
+Content-Type: application/json
+Authorization: Bearer <clave>      # o bien:  X-Api-Key: <clave>
+```
+
+La clave se genera en **Ajustes → Generar clave**, dentro de la app, y se
+muestra una sola vez. De ella solo se guarda un hash SHA-256: no se puede
+recuperar, solo revocar y hacer otra.
+
+**Cuerpo:** cualquier objeto JSON. Se guarda entero, tal cual llega. El único
+campo que la app interpreta es `external_ref`; todo lo demás queda disponible
+para consultarlo después.
+
+```json
+{
+  "external_ref": "CUY-2026-001234",
+  "customer_name": "Yanet Pérez",
+  "customer_phone": "+53 5 234 5678",
+  "amount_source": 10000,
+  "currency_source": "GYD",
+  "method_key": "cup_transferencia",
+  "amount_destination": 32000,
+  "currency_destination": "CUP",
+  "notes": "Entregar por la tarde"
+}
+```
+
+**Respuestas:**
+
+| Código | Cuerpo | Cuándo |
+|---|---|---|
+| `201` | `{"id": "...", "duplicated": false}` | Pedido guardado |
+| `200` | `{"id": "...", "duplicated": true}` | Ya habías mandado ese `external_ref` |
+| `400` | `{"error": "..."}` | El cuerpo no es un objeto JSON |
+| `401` | `{"error": "..."}` | Falta la clave o no es válida |
+| `503` | `{"error": "..."}` | El servidor no tiene configurada su llave de servicio |
+
+Mandar dos veces el mismo `external_ref` **no duplica el pedido**: devuelve el
+que ya existía. Tu web puede reintentar sin miedo tras un fallo de red.
+
+Ejemplo completo:
+
+```bash
+curl -X POST https://<tu-dominio>/api/pedidos \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer cuadre_XXXXXXXX..." \
+  -d '{"external_ref":"CUY-2026-001234","customer_name":"Yanet Pérez","amount_source":10000}'
+```
+
+El endpoint responde a `OPTIONS` con CORS abierto, así que también puede
+llamarse desde el navegador. La clave **no debe ir en código de navegador**:
+mándala desde el servidor de tu web.
+
 ## Alta de un operador nuevo
 
 1. Proyecto de Supabase nuevo y despliegue propio (el aislamiento entre clientes

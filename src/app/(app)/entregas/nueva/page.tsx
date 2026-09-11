@@ -115,13 +115,13 @@ export default function NuevaEntregaPage() {
     }
   }, [activos, metodoId]);
 
-  // Casi siempre atiende quien tiene el teléfono en la mano, así que su propia
-  // ficha manda sobre lo último usado.
+  // Manda lo último usado, no quién tiene el teléfono: el que entrega en Cuba
+  // hace la mayor parte, y muchas veces quien teclea no es quien entregó.
   useEffect(() => {
     if (!responsableId && trabajadores.length > 0) {
-      const propia = perfil?.contact_id && trabajadores.find((t) => t.id === perfil.contact_id);
       const guardado = trabajadores.find((t) => t.id === recordado(ULTIMO_RESPONSABLE));
-      setResponsableId((propia || guardado || trabajadores[0]).id);
+      const propia = trabajadores.find((t) => t.id === perfil?.contact_id);
+      setResponsableId((guardado || propia || trabajadores[0]).id);
     }
   }, [trabajadores, responsableId, perfil]);
 
@@ -295,11 +295,12 @@ export default function NuevaEntregaPage() {
 
         <CampoMonto
           id="usdt"
-          etiqueta="USDT que usaste"
+          etiqueta="USDT puestos en Cuba"
           sufijo="USDT"
           valor={usdt}
           onValor={setUsdt}
           decimal
+          ayuda="Lo que llegó a destino. El fee de la wallet va aparte, en Más detalles."
         />
 
         <SelectorContacto

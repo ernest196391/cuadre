@@ -10,6 +10,7 @@ const PESTANAS = [
   { href: "/entregas/nueva", etiqueta: "Entrega", icono: "M5 12h14M13 6l6 6-6 6" },
   { href: "/compras/nueva", etiqueta: "Compra", icono: "M19 12H5M11 6l-6 6 6 6" },
   { href: "/contactos", etiqueta: "Contactos", icono: "M4 20c0-3.3 2.7-6 6-6s6 2.7 6 6M10 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7" },
+  { href: "/reportes", etiqueta: "Cuentas", icono: "M4 19h16M7 16V9M12 16V5M17 16v-4" },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -64,14 +65,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <span className="h-6 w-1.5 shrink-0 rounded-full" style={{ background: "var(--marca)" }} />
           <span className="truncate text-base font-semibold">{tenant.brand_name}</span>
         </div>
-        <button
-          className="shrink-0 text-sm font-medium"
-          style={{ color: "var(--marca)", minHeight: 44 }}
-          onClick={salir}
-          type="button"
-        >
-          Salir
-        </button>
+        <div className="flex shrink-0 items-center gap-3">
+          {perfil.role === "owner" && (
+            <Link
+              href="/ajustes"
+              className="flex items-center text-sm font-medium"
+              style={{ color: "var(--texto-suave)", minHeight: 44 }}
+            >
+              Ajustes
+            </Link>
+          )}
+          <button
+            className="text-sm font-medium"
+            style={{ color: "var(--marca)", minHeight: 44 }}
+            onClick={salir}
+            type="button"
+          >
+            Salir
+          </button>
+        </div>
       </header>
 
       <main className="mx-auto max-w-lg px-5 pb-28 pt-5">{children}</main>
