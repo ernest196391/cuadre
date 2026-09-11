@@ -7,6 +7,7 @@ import { formatearFechaHora } from "@/lib/format";
 import { tasaLegible } from "@/lib/tasas";
 import { slugifyUnico } from "@/lib/slug";
 import ConfirmarDialogo from "@/components/ConfirmarDialogo";
+import TasasUsdt from "@/components/TasasUsdt";
 import CampoTasa, { direccionSugerida, tasaDesdeTexto, type Direccion } from "@/components/CampoTasa";
 
 interface MetodoFila extends Metodo {
@@ -377,6 +378,8 @@ export default function MetodosPage() {
           {errorAccion}
         </p>
       )}
+
+      <TasasUsdt />
 
       {!cargando && !error && historial.length > 0 && (
         <>

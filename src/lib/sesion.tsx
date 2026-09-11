@@ -33,6 +33,13 @@ export interface Metodo {
   sort_order: number;
 }
 
+/** A cuánto se vende hoy 1 USDT en la moneda de destino. */
+export interface TasaUsdt {
+  currency: string;
+  rate: number;
+  recorded_at: string;
+}
+
 interface Estado {
   cargando: boolean;
   error: string | null;
@@ -40,6 +47,7 @@ interface Estado {
   perfil: Perfil | null;
   tenant: Tenant | null;
   metodos: Metodo[];
+  tasasUsdt: TasaUsdt[];
   recargar: () => void;
   salir: () => Promise<void>;
 }
@@ -62,6 +70,7 @@ export function SesionProvider({ children }: { children: React.ReactNode }) {
     perfil: null,
     tenant: null,
     metodos: [],
+    tasasUsdt: [],
   });
 
   const cargar = useCallback(async () => {
@@ -70,7 +79,7 @@ export function SesionProvider({ children }: { children: React.ReactNode }) {
       const sb = supabase();
       const { data: auth } = await conTimeout(sb.auth.getUser());
       if (!auth.user) {
-        setEstado({ cargando: false, error: null, usuario: null, perfil: null, tenant: null, metodos: [] });
+        setEstado({ cargando: false, error: null, usuario: null, perfil: null, tenant: null, metodos: [], tasasUsdt: [] });
         return;
       }
 
@@ -84,12 +93,12 @@ export function SesionProvider({ children }: { children: React.ReactNode }) {
         setEstado({
           cargando: false,
           error: "Tu usuario todavía no está asignado a ningún operador. Pídeselo al dueño.",
-          usuario: auth.user, perfil: null, tenant: null, metodos: [],
+          usuario: auth.user, perfil: null, tenant: null, metodos: [], tasasUsdt: [],
         });
         return;
       }
 
-      const [tRes, mRes] = await Promise.all([
+      const [tRes, mRes, uRes] = await Promise.all([
         conTimeout(
           sb.from("tenants")
             .select("id, brand_name, brand_logo_url, brand_primary_color, brand_accent_color, base_currency")
@@ -100,6 +109,7 @@ export function SesionProvider({ children }: { children: React.ReactNode }) {
             .select("id, key, label, target_currency, rate, note, active, sort_order")
             .order("sort_order", { ascending: true })
         ),
+        conTimeout(sb.from("usdt_rates_current").select("currency, rate, recorded_at")),
       ]);
       if (tRes.error) throw tRes.error;
       if (mRes.error) throw mRes.error;
@@ -111,6 +121,7 @@ export function SesionProvider({ children }: { children: React.ReactNode }) {
         perfil: perfil as Perfil,
         tenant: tRes.data as Tenant,
         metodos: (mRes.data ?? []).map((m) => ({ ...m, rate: Number(m.rate) })) as Metodo[],
+        tasasUsdt: (uRes.data ?? []).map((t) => ({ ...t, rate: Number(t.rate) })) as TasaUsdt[],
       });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error desconocido.";

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { useSesion } from "@/lib/sesion";
-import { formatearMonto, parsearNumero, redondearMonto } from "@/lib/format";
+import { formatearMonto, formatearUsdt, parsearNumero, redondearMonto } from "@/lib/format";
 import { redondearTasa, tasaLegible } from "@/lib/tasas";
 import { calcularComision, type ReglaComision } from "@/lib/comision";
 import CampoMonto from "@/components/CampoMonto";
@@ -38,7 +38,7 @@ function recordado(clave: string) {
 
 export default function NuevaEntregaPage() {
   const router = useRouter();
-  const { tenant, perfil, metodos } = useSesion();
+  const { tenant, perfil, metodos, tasasUsdt } = useSesion();
   const monedaOrigen = tenant?.base_currency ?? "";
 
   const [clientes, setClientes] = useState<ContactoBreve[]>([]);
@@ -52,6 +52,7 @@ export default function NuevaEntregaPage() {
   const [entregadoTocado, setEntregadoTocado] = useState(false);
   const [entregado, setEntregado] = useState("");
   const [usdt, setUsdt] = useState("");
+  const [usdtTocado, setUsdtTocado] = useState(false);
   const [cliente, setCliente] = useState<ContactoBreve | null>(null);
   const [cuentaId, setCuentaId] = useState<string>("");
   const [responsableId, setResponsableId] = useState<string>("");
@@ -175,6 +176,9 @@ export default function NuevaEntregaPage() {
   }, [cliente]);
 
   const metodo = activos.find((m) => m.id === metodoId) ?? null;
+  // Segunda tasa del negocio: a cuánto se vende el USDT en destino. Con ella
+  // los USDT de la entrega salen solos en vez de calcularse de cabeza.
+  const tasaUsdt = metodo ? tasasUsdt.find((t) => t.currency === metodo.target_currency) ?? null : null;
   const montoRecibido = parsearNumero(recibido);
 
   // El monto entregado se calcula solo, pero se puede sobreescribir: si negoció
@@ -182,10 +186,13 @@ export default function NuevaEntregaPage() {
   const sugerido = metodo ? redondearMonto(montoRecibido * metodo.rate, metodo.target_currency) : 0;
   const montoEntregado = entregadoTocado ? parsearNumero(entregado) : sugerido;
   const tasaAplicada = montoRecibido > 0 ? redondearTasa(montoEntregado / montoRecibido) : 0;
+  const usdtSugerido =
+    tasaUsdt && montoEntregado > 0 ? Math.round((montoEntregado / tasaUsdt.rate) * 1e6) / 1e6 : 0;
+  const usdtUsados = usdtTocado ? parsearNumero(usdt) : usdtSugerido;
   const negociado = entregadoTocado && metodo != null && Math.abs(montoEntregado - sugerido) > 0.005;
 
   const comision = calcularComision(reglas[responsableId] ?? null, {
-    usdt_spent: parsearNumero(usdt),
+    usdt_spent: usdtUsados,
     delivered_amount: montoEntregado,
     source_amount: montoRecibido,
   });
@@ -194,7 +201,7 @@ export default function NuevaEntregaPage() {
     if (!metodo) return "Elige un método de entrega.";
     if (montoRecibido <= 0) return "Escribe cuánto recibiste.";
     if (montoEntregado <= 0) return "El monto entregado tiene que ser mayor que cero.";
-    if (parsearNumero(usdt) <= 0) return "Escribe cuántos USDT entregaste.";
+    if (usdtUsados <= 0) return "Escribe cuántos USDT entregaste.";
     if (!responsableId) return "Elige quién atendió la entrega.";
     return null;
   }
@@ -219,7 +226,8 @@ export default function NuevaEntregaPage() {
       delivered_currency: metodo.target_currency,
       method_id: metodo.id,
       rate_applied: tasaAplicada,
-      usdt_spent: parsearNumero(usdt),
+      usdt_spent: usdtUsados,
+      usdt_rate_used: tasaUsdt?.rate ?? null,
       network_fee_usdt: parsearNumero(feeRed),
       client_contact_id: cliente?.id ?? null,
       destination_account_id: cuentaId || null,
@@ -322,10 +330,17 @@ export default function NuevaEntregaPage() {
           id="usdt"
           etiqueta="USDT entregados"
           sufijo="USDT"
-          valor={usdt}
-          onValor={setUsdt}
+          valor={usdtTocado ? usdt : usdtSugerido > 0 ? formatearUsdt(usdtSugerido) : ""}
+          onValor={(v) => {
+            setUsdtTocado(true);
+            setUsdt(v);
+          }}
           decimal
-          ayuda="Los que llegaron a destino. El fee de la wallet va aparte."
+          ayuda={
+            tasaUsdt
+              ? `Salen de 1 USDT = ${tasaUsdt.rate.toLocaleString("es", { maximumFractionDigits: 4 })} ${metodo?.target_currency ?? ""}. Cámbialos si moviste otra cantidad.`
+              : "Pon a cuánto está el USDT en Tasas y se calculan solos."
+          }
         />
 
         <SelectorContacto
@@ -372,7 +387,7 @@ export default function NuevaEntregaPage() {
                 // atiende cambia la ganancia, y eso no puede quedar escondido
                 // detrás de un desplegable.
                 const suya = calcularComision(reglas[t.id] ?? null, {
-                  usdt_spent: parsearNumero(usdt),
+                  usdt_spent: usdtUsados,
                   delivered_amount: montoEntregado,
                   source_amount: montoRecibido,
                 });
