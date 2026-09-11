@@ -327,28 +327,50 @@ export default function NuevaEntregaPage() {
         )}
 
         <div>
-          <label className="etiqueta" htmlFor="responsable">
-            Atendida por
-          </label>
-          <select
-            id="responsable"
-            value={responsableId}
-            onChange={(e) => setResponsableId(e.target.value)}
-          >
-            {trabajadores.length === 0 && <option value="">Sin trabajadores dados de alta</option>}
-            {trabajadores.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.full_name}
-              </option>
-            ))}
-          </select>
-          {comision.monto > 0 && (
+          <label className="etiqueta">Atendida por</label>
+          {trabajadores.length === 0 ? (
+            <p className="text-sm" style={{ color: "var(--texto-suave)" }}>
+              Nadie dado de alta todavía.
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 gap-2">
+              {trabajadores.map((t) => {
+                const activa = t.id === responsableId;
+                // Cada opción enseña lo que cuesta EN ESTA entrega: quién
+                // atiende cambia la ganancia, y eso no puede quedar escondido
+                // detrás de un desplegable.
+                const suya = calcularComision(reglas[t.id] ?? null, {
+                  usdt_spent: parsearNumero(usdt),
+                  delivered_amount: montoEntregado,
+                  source_amount: montoRecibido,
+                });
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setResponsableId(t.id)}
+                    aria-pressed={activa}
+                    className="flex flex-col items-start gap-0.5 rounded-xl px-3 py-2.5 text-left"
+                    style={{
+                      minHeight: 60,
+                      border: `1.5px solid ${activa ? "var(--marca)" : "var(--linea)"}`,
+                      background: activa ? "color-mix(in srgb, var(--marca) 7%, white)" : "var(--tarjeta)",
+                    }}
+                  >
+                    <span className="truncate text-[15px] font-semibold">{t.full_name}</span>
+                    <span className="mono text-xs" style={{ color: "var(--texto-suave)" }}>
+                      {suya.monto > 0
+                        ? `−${formatearMonto(suya.monto, suya.moneda)} ${suya.moneda}`
+                        : "no cobra"}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          {comision.explicacion && comision.monto > 0 && (
             <p className="mt-1.5 text-xs" style={{ color: "var(--texto-suave)" }}>
-              Comisión de esta operación:{" "}
-              <span className="mono font-semibold">
-                {formatearMonto(comision.monto, comision.moneda)} {comision.moneda}
-              </span>
-              {comision.explicacion ? ` · ${comision.explicacion}` : ""}
+              Comisión: {comision.explicacion}
             </p>
           )}
         </div>
