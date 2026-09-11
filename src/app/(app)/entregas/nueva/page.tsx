@@ -6,9 +6,9 @@ import { supabase } from "@/lib/supabase/client";
 import { useSesion } from "@/lib/sesion";
 import { formatearMonto, formatearUsdt, parsearNumero, redondearMonto } from "@/lib/format";
 import { redondearTasa, tasaLegible } from "@/lib/tasas";
-import { calcularComision, type ReglaComision } from "@/lib/comision";
 import CampoMonto from "@/components/CampoMonto";
 import SelectorContacto, { type ContactoBreve } from "@/components/SelectorContacto";
+import { comisionDe, formatearUsd, porcentajeDe, valorEnUsd, type ReglaPersona } from "@/lib/comisiones";
 
 interface CuentaBreve {
   id: string;
@@ -43,7 +43,7 @@ export default function NuevaEntregaPage() {
 
   const [clientes, setClientes] = useState<ContactoBreve[]>([]);
   const [trabajadores, setTrabajadores] = useState<ContactoBreve[]>([]);
-  const [reglas, setReglas] = useState<Record<string, ReglaComision>>({});
+  const [reglas, setReglas] = useState<Record<string, ReglaPersona>>({});
   const [cuentas, setCuentas] = useState<CuentaBreve[]>([]);
 
   const activos = useMemo(() => metodos.filter((m) => m.active), [metodos]);
@@ -56,6 +56,7 @@ export default function NuevaEntregaPage() {
   const [cliente, setCliente] = useState<ContactoBreve | null>(null);
   const [cuentaId, setCuentaId] = useState<string>("");
   const [responsableId, setResponsableId] = useState<string>("");
+  const [origenId, setOrigenId] = useState<string>("");
 
   const [masDetalles, setMasDetalles] = useState(false);
   const [feeRed, setFeeRed] = useState("");
@@ -98,31 +99,17 @@ export default function NuevaEntregaPage() {
       sb
         .from("workers")
         .select(
-          "contact_id, commission_kind, commission_percent, commission_basis, commission_per_operation, commission_currency, contacts:contact_id(id, full_name, phone)"
+          "contact_id, delivery_pct, origination_pct, contacts:contact_id(id, full_name, phone)"
         )
         .eq("active", true),
     ]);
     if (cRes.data) setClientes(cRes.data as ContactoBreve[]);
     if (wRes.data) {
       const lista: ContactoBreve[] = [];
-      const mapa: Record<string, ReglaComision> = {};
-      for (const w of wRes.data as unknown as Array<{
-        contact_id: string;
-        commission_kind: "fixed" | "percent";
-        commission_percent: number;
-        commission_basis: ReglaComision["basis"];
-        commission_per_operation: number;
-        commission_currency: string;
-        contacts: ContactoBreve | null;
-      }>) {
+      const mapa: Record<string, ReglaPersona> = {};
+      for (const w of wRes.data as unknown as Array<{ contact_id: string; delivery_pct: number | null; origination_pct: number | null; contacts: ContactoBreve | null }>) {
         if (w.contacts) lista.push(w.contacts);
-        mapa[w.contact_id] = {
-          kind: w.commission_kind,
-          percent: Number(w.commission_percent),
-          basis: w.commission_basis,
-          fixed: Number(w.commission_per_operation),
-          currency: w.commission_currency,
-        };
+        mapa[w.contact_id] = { delivery_pct: w.delivery_pct, origination_pct: w.origination_pct };
       }
       setTrabajadores(lista);
       setReglas(mapa);
@@ -191,11 +178,17 @@ export default function NuevaEntregaPage() {
   const usdtUsados = usdtTocado ? parsearNumero(usdt) : usdtSugerido;
   const negociado = entregadoTocado && metodo != null && Math.abs(montoEntregado - sugerido) > 0.005;
 
-  const comision = calcularComision(reglas[responsableId] ?? null, {
-    usdt_spent: usdtUsados,
-    delivered_amount: montoEntregado,
-    source_amount: montoRecibido,
-  });
+  // Base de las dos comisiones: lo entregado valorado en USD. Es la regla real
+  // del negocio -- 3 USD por cada 100 puestos en destino.
+  const tasaUsdPorUsdt = tasasUsdt.find((t) => t.currency === "USD")?.rate;
+  const valorUsd = metodo
+    ? valorEnUsd(montoEntregado, metodo.target_currency, tasaUsdt?.rate, tasaUsdPorUsdt)
+    : 0;
+
+  const pctEntrega = porcentajeDe("delivery", reglas[responsableId], tenant);
+  const comisionEntrega = comisionDe(valorUsd, pctEntrega);
+  const pctOrigen = origenId ? porcentajeDe("origination", reglas[origenId], tenant) : 0;
+  const comisionOrigen = origenId ? comisionDe(valorUsd, pctOrigen) : 0;
 
   function validar(): string | null {
     if (!metodo) return "Elige un método de entrega.";
@@ -218,7 +211,8 @@ export default function NuevaEntregaPage() {
     setGuardando(true);
     setError(null);
 
-    const { error: err } = await supabase().from("deliveries").insert({
+    const sb = supabase();
+    const { data: creada, error: err } = await sb.from("deliveries").insert({
       tenant_id: tenant.id,
       source_amount_received: montoRecibido,
       source_currency: monedaOrigen,
@@ -232,20 +226,35 @@ export default function NuevaEntregaPage() {
       client_contact_id: cliente?.id ?? null,
       destination_account_id: cuentaId || null,
       handled_by_contact_id: responsableId,
-      commission_applied: comision.monto,
-      commission_currency: comision.moneda || monedaOrigen,
+      origin_contact_id: origenId || null,
+      usd_value: valorUsd,
+      commission_applied: comisionEntrega,
+      commission_currency: "USD",
       courier_contact_id: mensajeroId || null,
       courier_fee: parsearNumero(feeMensajeria),
       courier_fee_currency: monedaOrigen,
       notes: notas.trim() || null,
       created_by: perfil.id,
-    });
+    }).select("id").single();
 
-    setGuardando(false);
-    if (err) {
-      setError("No se pudo guardar: " + err.message);
+    if (err || !creada) {
+      setGuardando(false);
+      setError("No se pudo guardar: " + (err?.message ?? ""));
       return;
     }
+
+    // El libro de comisiones: una fila por comisión ganada. Es lo que después
+    // se cobra, y por eso se escribe aquí y no se recalcula más tarde.
+    const apuntes = [];
+    if (comisionEntrega > 0)
+      apuntes.push({ tenant_id: tenant.id, delivery_id: creada.id, contact_id: responsableId,
+                     kind: "delivery", pct_applied: pctEntrega, amount_usd: comisionEntrega });
+    if (origenId && comisionOrigen > 0)
+      apuntes.push({ tenant_id: tenant.id, delivery_id: creada.id, contact_id: origenId,
+                     kind: "origination", pct_applied: pctOrigen, amount_usd: comisionOrigen });
+    if (apuntes.length > 0) await sb.from("commission_entries").insert(apuntes);
+
+    setGuardando(false);
 
     recordar(ULTIMO_METODO, metodo.id);
     recordar(ULTIMO_RESPONSABLE, responsableId);
@@ -386,11 +395,7 @@ export default function NuevaEntregaPage() {
                 // Cada opción enseña lo que cuesta EN ESTA entrega: quién
                 // atiende cambia la ganancia, y eso no puede quedar escondido
                 // detrás de un desplegable.
-                const suya = calcularComision(reglas[t.id] ?? null, {
-                  usdt_spent: usdtUsados,
-                  delivered_amount: montoEntregado,
-                  source_amount: montoRecibido,
-                });
+                const suya = comisionDe(valorUsd, porcentajeDe("delivery", reglas[t.id], tenant));
                 return (
                   <button
                     key={t.id}
@@ -406,18 +411,41 @@ export default function NuevaEntregaPage() {
                   >
                     <span className="truncate text-[15px] font-semibold">{t.full_name}</span>
                     <span className="mono text-xs" style={{ color: "var(--texto-suave)" }}>
-                      {suya.monto > 0
-                        ? `comisión ${formatearMonto(suya.monto, suya.moneda)} ${suya.moneda}`
-                        : "sin comisión"}
+                      {suya > 0 ? `comisión ${formatearUsd(suya)} USD` : "sin comisión"}
                     </span>
                   </button>
                 );
               })}
             </div>
           )}
-          {comision.explicacion && comision.monto > 0 && (
+          {valorUsd !== null && valorUsd > 0 && (
             <p className="mt-1.5 text-xs" style={{ color: "var(--texto-suave)" }}>
-              Comisión: {comision.explicacion}
+              Entregas {formatearUsd(valorUsd)} USD de valor
+              {comisionEntrega > 0 && ` · comisión ${pctEntrega}% = ${formatearUsd(comisionEntrega)} USD`}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="etiqueta" htmlFor="origen">
+            Quién consiguió al cliente
+          </label>
+          <select id="origen" value={origenId} onChange={(e) => setOrigenId(e.target.value)}>
+            <option value="">Nadie / lo trajo el negocio</option>
+            {trabajadores.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.full_name}
+              </option>
+            ))}
+          </select>
+          {origenId && comisionOrigen > 0 && (
+            <p className="mt-1.5 text-xs" style={{ color: "var(--texto-suave)" }}>
+              Se lleva {pctOrigen}% = {formatearUsd(comisionOrigen)} USD por conseguirlo.
+            </p>
+          )}
+          {origenId && comisionOrigen === 0 && (
+            <p className="mt-1.5 text-xs" style={{ color: "var(--texto-suave)" }}>
+              Sin comisión por conseguir clientes. Se cambia en Ajustes.
             </p>
           )}
         </div>

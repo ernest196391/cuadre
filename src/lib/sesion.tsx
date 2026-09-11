@@ -11,6 +11,9 @@ export interface Tenant {
   brand_primary_color: string;
   brand_accent_color: string;
   base_currency: string;
+  /** Política de comisiones del operador; cada persona puede sobrescribirla. */
+  commission_delivery_pct: number;
+  commission_origination_pct: number;
 }
 
 export interface Perfil {
@@ -101,7 +104,7 @@ export function SesionProvider({ children }: { children: React.ReactNode }) {
       const [tRes, mRes, uRes] = await Promise.all([
         conTimeout(
           sb.from("tenants")
-            .select("id, brand_name, brand_logo_url, brand_primary_color, brand_accent_color, base_currency")
+            .select("id, brand_name, brand_logo_url, brand_primary_color, brand_accent_color, base_currency, commission_delivery_pct, commission_origination_pct")
             .eq("id", perfil.tenant_id).single()
         ),
         conTimeout(
@@ -119,7 +122,11 @@ export function SesionProvider({ children }: { children: React.ReactNode }) {
         error: null,
         usuario: auth.user,
         perfil: perfil as Perfil,
-        tenant: tRes.data as Tenant,
+        tenant: {
+          ...(tRes.data as Tenant),
+          commission_delivery_pct: Number((tRes.data as Tenant).commission_delivery_pct ?? 0),
+          commission_origination_pct: Number((tRes.data as Tenant).commission_origination_pct ?? 0),
+        },
         metodos: (mRes.data ?? []).map((m) => ({ ...m, rate: Number(m.rate) })) as Metodo[],
         tasasUsdt: (uRes.data ?? []).map((t) => ({ ...t, rate: Number(t.rate) })) as TasaUsdt[],
       });

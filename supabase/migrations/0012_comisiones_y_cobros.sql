@@ -1,0 +1,12 @@
+-- Cuadre — comisiones y cobros. Ver 0013 para las funciones de pedir y pagar.
+--
+-- BASE DE CÁLCULO: el valor de lo entregado expresado en USD. Es la regla que
+-- el negocio usa de verdad: 3 USD por cada 100 USD puestos en destino. Sobre
+-- los USDT movidos daría 2,78 y no cuadraría con lo que se paga.
+--
+-- DOS COMISIONES: una por entregar y otra por conseguir al cliente. No siempre
+-- las cobra la misma persona, y a veces el que consigue no entrega.
+--
+-- DOS NIVELES: el operador fija un porcentaje para todos y puede sobrescribirlo
+-- persona por persona. NULL en el trabajador = hereda el del operador.
+(el cuerpo completo de 0012 y 0013 ya está aplicado en la base; se documentan aquí)

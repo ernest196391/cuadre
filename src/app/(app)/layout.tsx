@@ -10,6 +10,7 @@ const PESTANAS = [
   { href: "/entregas/nueva", etiqueta: "Entrega", icono: "M5 12h14M13 6l6 6-6 6" },
   { href: "/compras/nueva", etiqueta: "Compra", icono: "M19 12H5M11 6l-6 6 6 6" },
   { href: "/contactos", etiqueta: "Contactos", icono: "M4 20c0-3.3 2.7-6 6-6s6 2.7 6 6M10 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7" },
+  { href: "/cobros", etiqueta: "Cobros", icono: "M3 7h18v10H3zM3 11h18M7 15h3" },
   { href: "/reportes", etiqueta: "Cuentas", icono: "M4 19h16M7 16V9M12 16V5M17 16v-4" },
 ];
 
