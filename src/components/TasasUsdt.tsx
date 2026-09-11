@@ -13,7 +13,7 @@ import { formatearFechaHora, parsearNumero } from "@/lib/format";
  * el que está en el país de destino.
  */
 export default function TasasUsdt() {
-  const { tenant, perfil, metodos, tasasUsdt, recargar } = useSesion();
+  const { tenant, perfil, metodos, tasasUsdt, refrescar } = useSesion();
 
   const [editando, setEditando] = useState<string | null>(null);
   const [valor, setValor] = useState("");
@@ -51,7 +51,7 @@ export default function TasasUsdt() {
     }
     setEditando(null);
     setValor("");
-    recargar();
+    refrescar();
   }
 
   if (monedas.length === 0) return null;

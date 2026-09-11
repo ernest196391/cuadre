@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useSesion } from "@/lib/sesion";
 import { formatearFechaHora } from "@/lib/format";
+import AjustesComisiones from "@/components/AjustesComisiones";
 
 interface Clave {
   id: string;
@@ -90,7 +91,9 @@ export default function AjustesPage() {
         {tenant?.brand_name}
       </p>
 
-      <h2 className="mb-1 text-sm font-semibold" style={{ color: "var(--texto-suave)" }}>
+      <AjustesComisiones />
+
+      <h2 className="mb-1 mt-8 text-sm font-semibold" style={{ color: "var(--texto-suave)" }}>
         Claves para recibir pedidos
       </h2>
       <p className="mb-3 text-xs" style={{ color: "var(--texto-suave)" }}>

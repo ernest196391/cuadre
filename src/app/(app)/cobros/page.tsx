@@ -32,7 +32,7 @@ interface Solicitud {
 const FORMAS = ["USDT", "Efectivo", "Transferencia"];
 
 export default function CobrosPage() {
-  const { perfil, recargar } = useSesion();
+  const { perfil, refrescar } = useSesion();
   const esDueno = perfil?.role === "owner";
   const miContacto = perfil?.contact_id ?? null;
 
@@ -119,7 +119,7 @@ export default function CobrosPage() {
     setNota("");
     setAviso("Pagado.");
     cargar();
-    recargar();
+    refrescar();
   }
 
   // Un trabajador solo ve lo suyo. El dueño ve a todo el mundo.

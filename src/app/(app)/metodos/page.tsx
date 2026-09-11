@@ -23,7 +23,7 @@ interface CambioTasa {
 }
 
 export default function MetodosPage() {
-  const { tenant, perfil, recargar } = useSesion();
+  const { tenant, perfil, refrescar } = useSesion();
   const monedaOrigen = tenant?.base_currency ?? "";
   const esDueno = perfil?.role === "owner";
 
@@ -109,7 +109,7 @@ export default function MetodosPage() {
     setEditando(null);
     setTextoTasa("");
     await cargar();
-    recargar();
+    refrescar();
   }
 
   async function cambiarEstado(m: MetodoFila) {
@@ -126,7 +126,7 @@ export default function MetodosPage() {
       return;
     }
     await cargar();
-    recargar();
+    refrescar();
   }
 
   const claves = metodos.map((m) => m.key);
@@ -183,7 +183,7 @@ export default function MetodosPage() {
     setNNota("");
     setFormAbierto(false);
     await cargar();
-    recargar();
+    refrescar();
   }
 
   return (

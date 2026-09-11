@@ -51,7 +51,14 @@ interface Estado {
   tenant: Tenant | null;
   metodos: Metodo[];
   tasasUsdt: TasaUsdt[];
+  /** Recarga enseñando el spinner. Para reintentar cuando algo falló. */
   recargar: () => void;
+  /**
+   * Recarga sin tapar la pantalla. Para después de guardar: el spinner de
+   * pantalla completa desmonta lo que hay debajo y se lleva por delante el
+   * aviso de "guardado" y cualquier formulario abierto.
+   */
+  refrescar: () => void;
   salir: () => Promise<void>;
 }
 
@@ -66,7 +73,7 @@ function conTimeout<T>(p: PromiseLike<T>, ms = 8000): Promise<T> {
 }
 
 export function SesionProvider({ children }: { children: React.ReactNode }) {
-  const [estado, setEstado] = useState<Omit<Estado, "recargar" | "salir">>({
+  const [estado, setEstado] = useState<Omit<Estado, "recargar" | "refrescar" | "salir">>({
     cargando: true,
     error: null,
     usuario: null,
@@ -76,8 +83,8 @@ export function SesionProvider({ children }: { children: React.ReactNode }) {
     tasasUsdt: [],
   });
 
-  const cargar = useCallback(async () => {
-    setEstado((e) => ({ ...e, cargando: true, error: null }));
+  const cargar = useCallback(async (silencioso = false) => {
+    setEstado((e) => ({ ...e, cargando: e.cargando || !silencioso, error: null }));
     try {
       const sb = supabase();
       const { data: auth } = await conTimeout(sb.auth.getUser());
@@ -155,7 +162,14 @@ export function SesionProvider({ children }: { children: React.ReactNode }) {
     await supabase().auth.signOut();
   }, []);
 
-  return <Ctx.Provider value={{ ...estado, recargar: cargar, salir }}>{children}</Ctx.Provider>;
+  // Envueltas a propósito: si se pasan directas a un onClick, React les manda
+  // el evento como primer argumento y el booleano saldría siempre verdadero.
+  const recargar = useCallback(() => cargar(false), [cargar]);
+  const refrescar = useCallback(() => cargar(true), [cargar]);
+
+  return (
+    <Ctx.Provider value={{ ...estado, recargar, refrescar, salir }}>{children}</Ctx.Provider>
+  );
 }
 
 export function useSesion() {
