@@ -93,6 +93,12 @@ export function SesionProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      // Se guarda en cuanto se sabe quién es, antes de pedir nada más. Si una
+      // consulta posterior falla, el catch conserva el usuario y se ve la
+      // pantalla de error con "Reintentar". Sin esto, un 500 pasajero dejaba
+      // usuario en null y el layout lo echaba al login con la sesión buena.
+      setEstado((e) => ({ ...e, usuario: auth.user }));
+
       const { data: perfil, error: ePerfil } = await conTimeout(
         sb.from("profiles").select("id, tenant_id, full_name, role, contact_id").eq("id", auth.user.id).maybeSingle()
       );
@@ -138,13 +144,17 @@ export function SesionProvider({ children }: { children: React.ReactNode }) {
         tasasUsdt: (uRes.data ?? []).map((t) => ({ ...t, rate: Number(t.rate) })) as TasaUsdt[],
       });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Error desconocido.";
+      // El detalle técnico va a la consola, no a la cara del usuario: "permission
+      // denied for table workers" no le dice nada a quien está entregando en la
+      // calle, y antes salía tal cual (o peor, como "Error desconocido").
+      console.error("Cuadre · fallo al cargar la sesión:", err);
+      const msg = err instanceof Error ? err.message : String((err as { message?: string })?.message ?? "");
       setEstado((e) => ({
         ...e,
         cargando: false,
-        error: /failed to fetch|networkerror|load failed/i.test(msg)
+        error: /failed to fetch|networkerror|load failed|tardó demasiado/i.test(msg)
           ? "No se pudo conectar con el servidor. Revisa tu conexión."
-          : msg,
+          : "El servidor no respondió bien. Vuelve a intentarlo en un momento.",
       }));
     }
   }, []);

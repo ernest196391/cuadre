@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import { useSesion } from "@/lib/sesion";
+import { useEnvioUnico } from "@/lib/envioUnico";
 import { formatearFecha, formatearMonto } from "@/lib/format";
 
 interface Contacto {
@@ -51,6 +52,7 @@ export default function ContactoPage({ params }: { params: { id: string } }) {
   const [copiado, setCopiado] = useState(false);
   const [copiadoCuenta, setCopiadoCuenta] = useState<string | null>(null);
 
+  const envioCuenta = useEnvioUnico();
   const [formCuenta, setFormCuenta] = useState(false);
   const [alias, setAlias] = useState("");
   const [titular, setTitular] = useState("");
@@ -151,6 +153,7 @@ export default function ContactoPage({ params }: { params: { id: string } }) {
 
   async function crearCuenta(e: FormEvent) {
     e.preventDefault();
+    if (!envioCuenta.tomar()) return;
     setGuardandoCuenta(true);
     setErrorCuenta(null);
     try {
@@ -177,6 +180,7 @@ export default function ContactoPage({ params }: { params: { id: string } }) {
     } catch (err) {
       setErrorCuenta(err instanceof Error ? err.message : "No se pudo guardar.");
     } finally {
+      envioCuenta.soltar();
       setGuardandoCuenta(false);
     }
   }

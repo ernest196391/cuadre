@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { useSesion } from "@/lib/sesion";
+import { useEnvioUnico } from "@/lib/envioUnico";
 import { formatearCosto, parsearNumero } from "@/lib/format";
 import CampoMonto from "@/components/CampoMonto";
 import SelectorContacto, { type ContactoBreve } from "@/components/SelectorContacto";
@@ -46,6 +47,7 @@ export default function NuevaCompraPage() {
     cargar();
   }, [cargar]);
 
+  const envio = useEnvioUnico();
   const montoGastado = parsearNumero(gastado);
   const montoFee = parsearNumero(fee);
   const usdtRecibidos = parsearNumero(usdt);
@@ -57,6 +59,7 @@ export default function NuevaCompraPage() {
     if (montoGastado <= 0) return setError(`Escribe cuánto gastaste en ${monedaOrigen}.`);
     if (usdtRecibidos <= 0) return setError("Escribe cuántos USDT te quedaron.");
     if (!perfil || !tenant) return;
+    if (!envio.tomar()) return;
 
     setGuardando(true);
     setError(null);
@@ -73,6 +76,7 @@ export default function NuevaCompraPage() {
     setGuardando(false);
 
     if (err) {
+      envio.soltar();
       setError("No se pudo guardar: " + err.message);
       return;
     }

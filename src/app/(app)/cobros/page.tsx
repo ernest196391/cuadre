@@ -3,9 +3,11 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useSesion } from "@/lib/sesion";
+import { useEnvioUnico } from "@/lib/envioUnico";
 import { formatearFechaHora } from "@/lib/format";
 import { formatearUsd } from "@/lib/comisiones";
 import ConfirmarDialogo from "@/components/ConfirmarDialogo";
+import { filtrarMonto } from "@/components/CampoMonto";
 
 interface Pendiente {
   contact_id: string;
@@ -43,6 +45,8 @@ export default function CobrosPage() {
   const [error, setError] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
 
+  const envioPedir = useEnvioUnico();
+  const envioPagar = useEnvioUnico();
   const [confirmarPedir, setConfirmarPedir] = useState<Pendiente | null>(null);
   const [pidiendo, setPidiendo] = useState(false);
 
@@ -85,10 +89,12 @@ export default function CobrosPage() {
   }, [cargar]);
 
   async function pedirCobro(p: Pendiente) {
+    if (!envioPedir.tomar()) return;
     setPidiendo(true);
     setAviso(null);
     const { error: err } = await supabase().rpc("request_commission_payout", { p_contact_id: p.contact_id });
     setPidiendo(false);
+    envioPedir.soltar();
     setConfirmarPedir(null);
     if (err) {
       setError("No se pudo pedir el cobro. " + err.message);
@@ -101,6 +107,7 @@ export default function CobrosPage() {
   async function marcarPagado(e: FormEvent) {
     e.preventDefault();
     if (!pagando) return;
+    if (!envioPagar.tomar()) return;
     setGuardandoPago(true);
     const { error: err } = await supabase().rpc("settle_commission_payout", {
       p_payout_id: pagando.id,
@@ -110,6 +117,7 @@ export default function CobrosPage() {
       p_note: nota.trim() || null,
     });
     setGuardandoPago(false);
+    envioPagar.soltar();
     if (err) {
       setError("No se pudo marcar como pagado. " + err.message);
       return;
@@ -256,7 +264,7 @@ export default function CobrosPage() {
                               className="mono"
                               inputMode="decimal"
                               value={monto}
-                              onChange={(e) => setMonto(e.target.value)}
+                              onChange={(e) => setMonto(filtrarMonto(e.target.value))}
                             />
                           </div>
                           <div>

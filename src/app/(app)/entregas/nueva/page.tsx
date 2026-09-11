@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { useSesion } from "@/lib/sesion";
+import { useEnvioUnico } from "@/lib/envioUnico";
 import { formatearMonto, formatearUsdt, parsearNumero, redondearMonto } from "@/lib/format";
 import { redondearTasa, tasaLegible } from "@/lib/tasas";
 import CampoMonto from "@/components/CampoMonto";
@@ -64,6 +65,7 @@ export default function NuevaEntregaPage() {
   const [feeMensajeria, setFeeMensajeria] = useState("");
   const [notas, setNotas] = useState("");
 
+  const envio = useEnvioUnico();
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errorCliente, setErrorCliente] = useState<string | null>(null);
@@ -207,6 +209,7 @@ export default function NuevaEntregaPage() {
       return;
     }
     if (!metodo || !perfil || !tenant) return;
+    if (!envio.tomar()) return;
 
     setGuardando(true);
     setError(null);
@@ -238,6 +241,7 @@ export default function NuevaEntregaPage() {
     }).select("id").single();
 
     if (err || !creada) {
+      envio.soltar();
       setGuardando(false);
       setError("No se pudo guardar: " + (err?.message ?? ""));
       return;

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import { useSesion } from "@/lib/sesion";
+import { useEnvioUnico } from "@/lib/envioUnico";
 
 interface Contacto {
   id: string;
@@ -66,10 +67,13 @@ export default function ContactosPage() {
     );
   }, [busqueda, contactos]);
 
+  const envioContacto = useEnvioUnico();
+
   async function crear(e: FormEvent) {
     e.preventDefault();
     if (nombre.trim().length < 2) return setErrorForm("Escribe el nombre.");
     if (!perfil || !tenant) return;
+    if (!envioContacto.tomar()) return;
 
     setGuardando(true);
     setErrorForm(null);
@@ -86,6 +90,7 @@ export default function ContactosPage() {
       .single();
 
     if (err || !data) {
+      envioContacto.soltar();
       setGuardando(false);
       setErrorForm("No se pudo crear: " + (err?.message ?? "error desconocido"));
       return;
@@ -95,6 +100,7 @@ export default function ContactosPage() {
       await sb.from("contact_roles").insert(roles.map((role) => ({ contact_id: data.id, role })));
     }
 
+    envioContacto.soltar();
     setGuardando(false);
     setNombre("");
     setTelefono("");

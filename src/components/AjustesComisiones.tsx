@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useSesion } from "@/lib/sesion";
 import { esHeredado, porcentajeDe, type ReglaPersona, type TipoComision } from "@/lib/comisiones";
+import { filtrarMonto } from "@/components/CampoMonto";
 
 interface Persona extends ReglaPersona {
   contact_id: string;
@@ -174,7 +175,7 @@ export default function AjustesComisiones() {
                 className="mono"
                 inputMode="decimal"
                 value={gEntregar}
-                onChange={(e) => setGEntregar(e.target.value)}
+                onChange={(e) => setGEntregar(filtrarMonto(e.target.value))}
               />
               <span className="mono shrink-0 text-sm" style={{ color: "var(--texto-suave)" }}>
                 %
@@ -191,7 +192,7 @@ export default function AjustesComisiones() {
                 className="mono"
                 inputMode="decimal"
                 value={gConseguir}
-                onChange={(e) => setGConseguir(e.target.value)}
+                onChange={(e) => setGConseguir(filtrarMonto(e.target.value))}
               />
               <span className="mono shrink-0 text-sm" style={{ color: "var(--texto-suave)" }}>
                 %
@@ -260,7 +261,7 @@ export default function AjustesComisiones() {
                           inputMode="decimal"
                           placeholder="vacío = del equipo"
                           value={pEntregar}
-                          onChange={(e) => setPEntregar(e.target.value)}
+                          onChange={(e) => setPEntregar(filtrarMonto(e.target.value))}
                         />
                       </div>
                       <div>
@@ -273,7 +274,7 @@ export default function AjustesComisiones() {
                           inputMode="decimal"
                           placeholder="vacío = del equipo"
                           value={pConseguir}
-                          onChange={(e) => setPConseguir(e.target.value)}
+                          onChange={(e) => setPConseguir(filtrarMonto(e.target.value))}
                         />
                       </div>
                     </div>

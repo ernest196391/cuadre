@@ -4,6 +4,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useSesion } from "@/lib/sesion";
 import { formatearFechaHora, parsearNumero } from "@/lib/format";
+import { filtrarMonto } from "@/components/CampoMonto";
 
 /**
  * A cuánto se vende el USDT en destino. Es la segunda tasa del negocio y la que
@@ -109,7 +110,7 @@ export default function TasasUsdt() {
                     autoComplete="off"
                     autoFocus
                     value={valor}
-                    onChange={(e) => setValor(e.target.value)}
+                    onChange={(e) => setValor(filtrarMonto(e.target.value))}
                     style={{ fontSize: 20 }}
                   />
                   <div className="mt-3 flex gap-2">
