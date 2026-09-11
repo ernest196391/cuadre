@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase/client";
 import { useSesion } from "@/lib/sesion";
 import { formatearMonto, parsearNumero, redondearMonto } from "@/lib/format";
 import { redondearTasa, tasaLegible } from "@/lib/tasas";
+import { calcularComision, type ReglaComision } from "@/lib/comision";
 import CampoMonto from "@/components/CampoMonto";
 import SelectorContacto, { type ContactoBreve } from "@/components/SelectorContacto";
 
@@ -42,7 +43,7 @@ export default function NuevaEntregaPage() {
 
   const [clientes, setClientes] = useState<ContactoBreve[]>([]);
   const [trabajadores, setTrabajadores] = useState<ContactoBreve[]>([]);
-  const [comisiones, setComisiones] = useState<Record<string, number>>({});
+  const [reglas, setReglas] = useState<Record<string, ReglaComision>>({});
   const [cuentas, setCuentas] = useState<CuentaBreve[]>([]);
 
   const activos = useMemo(() => metodos.filter((m) => m.active), [metodos]);
@@ -68,18 +69,37 @@ export default function NuevaEntregaPage() {
     const sb = supabase();
     const [cRes, wRes] = await Promise.all([
       sb.from("contacts").select("id, full_name, phone").eq("active", true).order("full_name"),
-      sb.from("workers").select("contact_id, commission_per_operation, contacts:contact_id(id, full_name, phone)").eq("active", true),
+      sb
+        .from("workers")
+        .select(
+          "contact_id, commission_kind, commission_percent, commission_basis, commission_per_operation, commission_currency, contacts:contact_id(id, full_name, phone)"
+        )
+        .eq("active", true),
     ]);
     if (cRes.data) setClientes(cRes.data as ContactoBreve[]);
     if (wRes.data) {
       const lista: ContactoBreve[] = [];
-      const com: Record<string, number> = {};
-      for (const w of wRes.data as unknown as Array<{ contact_id: string; commission_per_operation: number; contacts: ContactoBreve | null }>) {
+      const mapa: Record<string, ReglaComision> = {};
+      for (const w of wRes.data as unknown as Array<{
+        contact_id: string;
+        commission_kind: "fixed" | "percent";
+        commission_percent: number;
+        commission_basis: ReglaComision["basis"];
+        commission_per_operation: number;
+        commission_currency: string;
+        contacts: ContactoBreve | null;
+      }>) {
         if (w.contacts) lista.push(w.contacts);
-        com[w.contact_id] = Number(w.commission_per_operation);
+        mapa[w.contact_id] = {
+          kind: w.commission_kind,
+          percent: Number(w.commission_percent),
+          basis: w.commission_basis,
+          fixed: Number(w.commission_per_operation),
+          currency: w.commission_currency,
+        };
       }
       setTrabajadores(lista);
-      setComisiones(com);
+      setReglas(mapa);
     }
   }, []);
 
@@ -95,12 +115,15 @@ export default function NuevaEntregaPage() {
     }
   }, [activos, metodoId]);
 
+  // Casi siempre atiende quien tiene el teléfono en la mano, así que su propia
+  // ficha manda sobre lo último usado.
   useEffect(() => {
     if (!responsableId && trabajadores.length > 0) {
-      const guardado = recordado(ULTIMO_RESPONSABLE);
-      setResponsableId(trabajadores.find((t) => t.id === guardado)?.id ?? trabajadores[0].id);
+      const propia = perfil?.contact_id && trabajadores.find((t) => t.id === perfil.contact_id);
+      const guardado = trabajadores.find((t) => t.id === recordado(ULTIMO_RESPONSABLE));
+      setResponsableId((propia || guardado || trabajadores[0]).id);
     }
-  }, [trabajadores, responsableId]);
+  }, [trabajadores, responsableId, perfil]);
 
   // Las cuentas de destino son del cliente elegido, no de todo el mundo.
   useEffect(() => {
@@ -136,6 +159,12 @@ export default function NuevaEntregaPage() {
   const tasaAplicada = montoRecibido > 0 ? redondearTasa(montoEntregado / montoRecibido) : 0;
   const negociado = entregadoTocado && metodo != null && Math.abs(montoEntregado - sugerido) > 0.005;
 
+  const comision = calcularComision(reglas[responsableId] ?? null, {
+    usdt_spent: parsearNumero(usdt),
+    delivered_amount: montoEntregado,
+    source_amount: montoRecibido,
+  });
+
   function validar(): string | null {
     if (!metodo) return "Elige un método de entrega.";
     if (montoRecibido <= 0) return "Escribe cuánto recibiste.";
@@ -170,8 +199,8 @@ export default function NuevaEntregaPage() {
       client_contact_id: cliente?.id ?? null,
       destination_account_id: cuentaId || null,
       handled_by_contact_id: responsableId,
-      commission_applied: comisiones[responsableId] ?? 0,
-      commission_currency: monedaOrigen,
+      commission_applied: comision.monto,
+      commission_currency: comision.moneda || monedaOrigen,
       courier_contact_id: mensajeroId || null,
       courier_fee: parsearNumero(feeMensajeria),
       courier_fee_currency: monedaOrigen,
@@ -313,10 +342,13 @@ export default function NuevaEntregaPage() {
               </option>
             ))}
           </select>
-          {responsableId && comisiones[responsableId] > 0 && (
+          {comision.monto > 0 && (
             <p className="mt-1.5 text-xs" style={{ color: "var(--texto-suave)" }}>
-              Comisión de esta operación: {formatearMonto(comisiones[responsableId], monedaOrigen)}{" "}
-              {monedaOrigen}
+              Comisión de esta operación:{" "}
+              <span className="mono font-semibold">
+                {formatearMonto(comision.monto, comision.moneda)} {comision.moneda}
+              </span>
+              {comision.explicacion ? ` · ${comision.explicacion}` : ""}
             </p>
           )}
         </div>

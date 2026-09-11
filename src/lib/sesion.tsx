@@ -18,6 +18,8 @@ export interface Perfil {
   tenant_id: string;
   full_name: string;
   role: "owner" | "worker";
+  /** Su ficha de contacto: con esto "atendida por" viene marcado solo. */
+  contact_id: string | null;
 }
 
 export interface Metodo {
@@ -73,7 +75,7 @@ export function SesionProvider({ children }: { children: React.ReactNode }) {
       }
 
       const { data: perfil, error: ePerfil } = await conTimeout(
-        sb.from("profiles").select("id, tenant_id, full_name, role").eq("id", auth.user.id).maybeSingle()
+        sb.from("profiles").select("id, tenant_id, full_name, role, contact_id").eq("id", auth.user.id).maybeSingle()
       );
       if (ePerfil) throw ePerfil;
 
