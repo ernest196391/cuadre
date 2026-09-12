@@ -46,7 +46,45 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
 ## Base de datos
 
-Las migraciones están en `supabase/migrations/`, numeradas y en orden.
+Las migraciones están en `supabase/migrations/`, numeradas y en orden. **Están
+escritas contra `public.`**, que es lo natural para un proyecto de Supabase
+propio.
+
+### El esquema `cuadre`
+
+En el despliegue actual Cuadre NO vive en `public`: vive en un esquema aparte
+llamado `cuadre`, dentro del proyecto de Supabase que ya usaba la landing de
+Cuyana. Es una decisión de coste, no de diseño — el plan gratuito de Supabase
+solo permite dos proyectos activos.
+
+Para trasladar las migraciones a ese esquema hay cuatro reglas, y las dos
+últimas se parecen y significan lo contrario:
+
+| En la migración | Pasa a ser | Por qué |
+|---|---|---|
+| `public.tabla` | `cuadre.tabla` | Son los objetos de Cuadre |
+| `search_path = public` | `search_path = cuadre` | Lo que ven las funciones |
+| `in schema public` | `in schema cuadre` | **El esquema.** Sin cambiarlo se le revocan los permisos al `public` de la landing y su web se queda en blanco |
+| `from public, anon` | *(no se toca)* | Ahí `public` es el ROL de Postgres, «todo el mundo», no el esquema |
+
+En `0007_cerrar_ejecucion_publica.sql` los dos últimos aparecen en la misma
+línea.
+
+Un detalle que no se ve venir: las migraciones sobre todo **revocan**, porque
+dan por hecho los permisos que Supabase regala solo en `public`. En un esquema
+nuevo no hay nada que revocar, así que antes de crear la primera tabla hay que
+poner los privilegios por defecto del esquema; si no, la app da «permission
+denied» en todo.
+
+Lo que se pierde compartiendo proyecto: la clave de servicio de la landing
+alcanza también las tablas de Cuadre. Los números de tarjeta siguen cifrados
+—esa clave vive en el entorno del servidor, no en la base— pero nombres,
+teléfonos y montos quedan al alcance de otra aplicación. El día que Cuadre se
+le venda a otro operador, cada uno necesita su propio proyecto.
+
+La app sabe a qué esquema hablar por `db: { schema: "cuadre" }` en
+`src/lib/supabase/client.ts` y `admin.ts`. Y el esquema tiene que estar
+expuesto en la API: **Supabase → Project Settings → API → Exposed schemas**.
 
 ### Cómo se protege
 

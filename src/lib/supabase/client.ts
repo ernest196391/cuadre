@@ -2,6 +2,9 @@
 
 import { createBrowserClient } from "@supabase/ssr";
 
+/** El esquema de Postgres donde viven las tablas de Cuadre. */
+export const ESQUEMA = "cuadre";
+
 export function hayConfiguracion() {
   return Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -16,7 +19,11 @@ export function crearClienteNavegador() {
   }
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    // Cuadre vive en su propio esquema, no en `public`. Comparte proyecto con
+    // la landing de Cuyana, que ya tiene su propia `delivery_methods`; sin esto
+    // cada consulta iría a la tabla de la otra app.
+    { db: { schema: ESQUEMA } }
   );
 }
 

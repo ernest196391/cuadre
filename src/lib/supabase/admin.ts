@@ -15,5 +15,7 @@ export function crearClienteServicio() {
   }
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key, {
     auth: { persistSession: false, autoRefreshToken: false },
+    // Mismo esquema que el cliente del navegador: `public` es de la landing.
+    db: { schema: "cuadre" },
   });
 }
