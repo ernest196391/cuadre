@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { ESQUEMA } from "./esquema";
 
 /**
  * Cliente con la sesión del usuario. Todo lo que pase por aquí sigue sujeto a
@@ -11,6 +12,9 @@ export function crearClienteServidor() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      // Igual que el del navegador y el de servicio. Sin esto, cada `.from()`
+      // de una ruta de API va a `public`, que es donde vive la landing.
+      db: { schema: ESQUEMA },
       cookies: {
         getAll: () => cookieStore.getAll(),
         setAll: (cookiesToSet) => {

@@ -1,9 +1,9 @@
 "use client";
 
 import { createBrowserClient } from "@supabase/ssr";
+import { ESQUEMA } from "./esquema";
 
-/** El esquema de Postgres donde viven las tablas de Cuadre. */
-export const ESQUEMA = "cuadre";
+export { ESQUEMA };
 
 export function hayConfiguracion() {
   return Boolean(

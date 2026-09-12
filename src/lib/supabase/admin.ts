@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { ESQUEMA } from "./esquema";
 
 /**
  * Cliente de servicio. Es la única llave que abre las funciones de tarjeta, y
@@ -16,6 +17,6 @@ export function crearClienteServicio() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key, {
     auth: { persistSession: false, autoRefreshToken: false },
     // Mismo esquema que el cliente del navegador: `public` es de la landing.
-    db: { schema: "cuadre" },
+    db: { schema: ESQUEMA },
   });
 }
