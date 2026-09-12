@@ -19,13 +19,17 @@ export default function SelectorContacto({
   seleccionado,
   onSeleccionar,
   onCrear,
+  propuesto,
   placeholder = "Buscar por nombre o teléfono",
 }: {
   etiqueta: string;
   contactos: ContactoBreve[];
   seleccionado: ContactoBreve | null;
   onSeleccionar: (c: ContactoBreve | null) => void;
-  onCrear?: (nombre: string) => void;
+  onCrear?: (nombre: string, telefono?: string | null) => void;
+  /** Alguien que todavía no es contacto —llega de un pedido de la web— y que
+   *  se ofrece dar de alta con su teléfono, sin teclear nada. */
+  propuesto?: { nombre: string; telefono: string | null } | null;
   placeholder?: string;
 }) {
   const [busqueda, setBusqueda] = useState("");
@@ -75,6 +79,28 @@ export default function SelectorContacto({
         onChange={(e) => setBusqueda(e.target.value)}
         onFocus={() => setAbierto(true)}
       />
+
+      {/* Quien pidió por la web ya dio su nombre y su teléfono. Obligar a
+          teclearlos otra vez aquí es pedirle a alguien que copie a mano un dato
+          que la app ya tiene delante — y así es como se escriben mal. */}
+      {propuesto && !busqueda.trim() && onCrear && (
+        <button
+          type="button"
+          className="boton-secundario mt-2 w-full justify-start text-left"
+          style={{ color: "var(--marca)" }}
+          onClick={() => onCrear(propuesto.nombre, propuesto.telefono)}
+        >
+          <span className="truncate">
+            + Dar de alta a «{propuesto.nombre}»
+            {propuesto.telefono && (
+              <span className="ml-2 text-xs font-normal" style={{ color: "var(--texto-suave)" }}>
+                {propuesto.telefono}
+              </span>
+            )}
+          </span>
+        </button>
+      )}
+
       {abierto && (
         <ul className="mt-2 flex flex-col gap-1">
           {resultados.map((c) => (

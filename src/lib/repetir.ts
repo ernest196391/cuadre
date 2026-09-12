@@ -1,16 +1,24 @@
 "use client";
 
 /**
- * Traspaso de una entrega anulada al formulario de una nueva.
+ * Traspaso de datos al formulario de una entrega nueva.
  *
- * Anular y volver a teclearlo todo de memoria es justo donde se cuela el
- * segundo error. Se pasa por sessionStorage y no por la URL a propósito: son
- * montos y personas, y no tienen por qué quedar en el historial del navegador
- * ni en un enlace que se pueda compartir sin querer.
+ * Dos cosas distintas llegan por aquí, y el formulario tiene que poder
+ * distinguirlas porque lo que le dice a la persona no es lo mismo:
+ *
+ * - `anulada`: se anuló una entrega y se vuelve a registrar corregida. Volver
+ *   a teclearlo todo de memoria es justo donde se cuela el segundo error.
+ * - `pedido`: llegó de la web del operador y nadie lo ha tecleado nunca.
+ *
+ * Va por sessionStorage y no por la URL a propósito: son montos y personas, y
+ * no tienen por qué quedar en el historial del navegador ni en un enlace que
+ * se pueda compartir sin querer.
  */
 const CLAVE = "cuadre.repetir_entrega";
 
 export interface EntregaRepetible {
+  /** De dónde salen estos datos. Cambia el aviso de la pantalla. */
+  origen: "anulada" | "pedido";
   metodoId: string | null;
   recibido: string;
   entregado: string;
@@ -20,6 +28,10 @@ export interface EntregaRepetible {
   responsableId: string | null;
   origenId: string | null;
   notas: string | null;
+  /** Solo en los pedidos de la web: quien pidió todavía no existe como
+   *  contacto. Se arrastran sus datos para no copiarlos del pedido a mano. */
+  clienteNombre?: string | null;
+  clienteTelefono?: string | null;
 }
 
 export function guardarParaRepetir(datos: EntregaRepetible) {

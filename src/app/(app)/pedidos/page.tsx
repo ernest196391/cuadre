@@ -94,6 +94,7 @@ export default function PedidosPage() {
     const clave = texto(p.payload, "method_key");
     const metodo = metodos.find((m) => m.key === clave);
     guardarParaRepetir({
+      origen: "pedido",
       metodoId: metodo?.id ?? null,
       recibido: String(numero(p.payload, "amount_source", "monto", "amount") ?? ""),
       entregado: String(numero(p.payload, "amount_destination", "monto_destino") ?? ""),
@@ -102,9 +103,12 @@ export default function PedidosPage() {
       cuentaId: null,
       responsableId: null,
       origenId: null,
-      notas:
-        `Pedido de la web${p.external_ref ? ` ${p.external_ref}` : ""}` +
-        (texto(p.payload, "customer_name", "cliente") ? ` · ${texto(p.payload, "customer_name", "cliente")}` : ""),
+      // El nombre y el teléfono NO se meten en las notas: van como datos, para
+      // que el formulario pueda buscar a esa persona entre los contactos y, si
+      // no está, darla de alta con su teléfono de un solo toque.
+      clienteNombre: texto(p.payload, "customer_name", "cliente", "nombre"),
+      clienteTelefono: texto(p.payload, "customer_phone", "telefono", "phone"),
+      notas: `Pedido de la web${p.external_ref ? ` ${p.external_ref}` : ""}`,
     });
     await marcar(p.id, true);
     router.push("/entregas/nueva");

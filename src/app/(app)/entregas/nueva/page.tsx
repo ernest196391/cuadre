@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { useSesion } from "@/lib/sesion";
@@ -75,13 +75,20 @@ export default function NuevaEntregaPage() {
    * Dar de alta al cliente sin salir de aquí. Obligar a abandonar una entrega a
    * medias para ir a Contactos es lo que hace que la entrega no se registre.
    */
-  async function crearClienteAlVuelo(nombre: string) {
+  async function crearClienteAlVuelo(nombre: string, telefono?: string | null) {
     if (!tenant || !perfil) return;
     setErrorCliente(null);
     const sb = supabase();
     const { data, error: err } = await sb
       .from("contacts")
-      .insert({ tenant_id: tenant.id, full_name: nombre, created_by: perfil.id })
+      .insert({
+        tenant_id: tenant.id,
+        full_name: nombre,
+        // Viniendo de un pedido de la web llega el teléfono. Perderlo obligaría
+        // a ir a buscarlo al pedido para poder llamar a esta persona.
+        phone: telefono?.trim() || null,
+        created_by: perfil.id,
+      })
       .select("id, full_name, phone")
       .single();
 
@@ -93,6 +100,7 @@ export default function NuevaEntregaPage() {
     const nuevo = data as ContactoBreve;
     setClientes((prev) => [...prev, nuevo].sort((a, b) => a.full_name.localeCompare(b.full_name)));
     setCliente(nuevo);
+    setClienteSugerido(null);
   }
 
   const cargarListas = useCallback(async () => {
@@ -124,24 +132,41 @@ export default function NuevaEntregaPage() {
   }, [cargarListas]);
 
   /**
-   * Si viene de anular una entrega, llega con todo puesto menos lo que hay que
-   * corregir. Volver a teclearlo de memoria es justo donde se cuela el segundo
-   * error, que es el que ya nadie revisa.
+   * Se llega aquí con datos puestos de dos maneras: anulando una entrega para
+   * corregirla, o convirtiendo un pedido de la web. Volver a teclearlo de
+   * memoria es justo donde se cuela el segundo error, que es el que ya nadie
+   * revisa.
    */
-  const [repetida, setRepetida] = useState(false);
+  const [vengoDe, setVengoDe] = useState<"anulada" | "pedido" | null>(null);
   const [clientePendiente, setClientePendiente] = useState<string | null>(null);
   const [entregadoPendiente, setEntregadoPendiente] = useState<string | null>(null);
+  const [clienteSugerido, setClienteSugerido] = useState<{ nombre: string; telefono: string | null } | null>(null);
+  /**
+   * Ref y no estado a propósito: se lee en el efecto de más abajo que pone el
+   * método por defecto, y los dos corren en la MISMA pasada. Un estado ahí
+   * todavía valdría lo de antes, y el método por defecto pisaría el del pedido
+   * —que es exactamente el fallo que esto viene a cerrar: un pedido de CUP en
+   * efectivo quedaba registrado como transferencia, con otra tasa y otra
+   * ganancia.
+   */
+  const metodoImpuesto = useRef<string | null>(null);
   useEffect(() => {
     const r = tomarParaRepetir();
     if (!r) return;
-    setRepetida(true);
-    if (r.metodoId) setMetodoId(r.metodoId);
+    setVengoDe(r.origen ?? "anulada");
+    if (r.metodoId) {
+      metodoImpuesto.current = r.metodoId;
+      setMetodoId(r.metodoId);
+    }
     if (r.recibido) setRecibido(r.recibido);
     if (r.responsableId) setResponsableId(r.responsableId);
     if (r.origenId) setOrigenId(r.origenId);
     if (r.notas) {
       setNotas(r.notas);
       setMasDetalles(true);
+    }
+    if (r.clienteNombre) {
+      setClienteSugerido({ nombre: r.clienteNombre, telefono: r.clienteTelefono ?? null });
     }
     if (r.clienteId) setClientePendiente(r.clienteId);
     // El monto entregado se decide abajo, cuando ya se sabe la tasa. NO se fija
@@ -178,8 +203,33 @@ export default function NuevaEntregaPage() {
     setClientePendiente(null);
   }, [clientePendiente, clientes]);
 
-  // Preselección: lo último que usó, si sigue existiendo.
+  /**
+   * El cliente que viene en un pedido de la web no es un contacto todavía:
+   * llega como nombre y teléfono sueltos. Si ya está dado de alta se engancha
+   * solo —por el teléfono antes que por el nombre, que se escribe de mil
+   * maneras—; si no, queda propuesto para crearlo de un toque.
+   */
   useEffect(() => {
+    if (!clienteSugerido || cliente) return;
+    const soloDigitos = (t: string | null) => (t ?? "").replace(/\D/g, "");
+    const tel = soloDigitos(clienteSugerido.telefono);
+    // Los últimos 8 dígitos: el mismo número se guarda con y sin prefijo de país.
+    const cola = tel.length >= 8 ? tel.slice(-8) : null;
+    const yaEsta =
+      (cola && clientes.find((c) => soloDigitos(c.phone).endsWith(cola))) ||
+      clientes.find(
+        (c) => c.full_name.trim().toLowerCase() === clienteSugerido.nombre.trim().toLowerCase()
+      );
+    if (yaEsta) {
+      setCliente(yaEsta);
+      setClienteSugerido(null);
+    }
+  }, [clienteSugerido, clientes, cliente]);
+
+  // Preselección: lo último que usó, si sigue existiendo. Nunca por encima del
+  // método que trae un pedido o una entrega anulada: ese ya está decidido.
+  useEffect(() => {
+    if (metodoImpuesto.current) return;
     if (metodoId === null && activos.length > 0) {
       const guardado = recordado(ULTIMO_METODO);
       setMetodoId(activos.find((m) => m.id === guardado)?.id ?? activos[0].id);
@@ -325,13 +375,15 @@ export default function NuevaEntregaPage() {
     <>
       <h1 className="mb-4 text-xl font-semibold">Registrar entrega</h1>
 
-      {repetida && (
+      {vengoDe && (
         <p
           className="mb-4 rounded-xl px-4 py-3 text-sm"
           style={{ background: "rgba(36,107,206,.08)", color: "#246BCE" }}
           role="status"
         >
-          Están los datos de la entrega que anulaste. Corrige lo que estaba mal y guárdala.
+          {vengoDe === "pedido"
+            ? "Vienen del pedido de tu web. Revísalos y guarda la entrega."
+            : "Están los datos de la entrega que anulaste. Corrige lo que estaba mal y guárdala."}
         </p>
       )}
 
@@ -428,6 +480,7 @@ export default function NuevaEntregaPage() {
           seleccionado={cliente}
           onSeleccionar={setCliente}
           onCrear={crearClienteAlVuelo}
+          propuesto={clienteSugerido}
         />
         {errorCliente && (
           <p className="-mt-2 text-sm" style={{ color: "#b3261e" }}>

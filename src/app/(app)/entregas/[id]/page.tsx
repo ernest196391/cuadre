@@ -142,6 +142,7 @@ export default function EntregaPage({ params }: { params: { id: string } }) {
   function repetir() {
     if (!entrega) return;
     guardarParaRepetir({
+      origen: "anulada",
       metodoId: entrega.method_id,
       recibido: String(Number(entrega.source_amount_received)),
       entregado: String(Number(entrega.delivered_amount)),
