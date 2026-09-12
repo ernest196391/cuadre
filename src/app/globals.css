@@ -14,6 +14,19 @@
   --linea: rgba(24, 24, 27, 0.12);
 }
 
+/* Marca del PRODUCTO, del brand kit. No confundir con `--marca`, que es la del
+   OPERADOR y se sobrescribe al entrar con su fila de `tenants`. Estas solo se
+   usan en el envoltorio —entrar, instalar, sin conexión—, que es donde todavía
+   no se sabe de quién es la instalación. */
+:root {
+  --cuadre-azul: #2457d6;
+  --cuadre-azul-pulsado: #1c46ab;
+  --cuadre-grafito: #17202a;
+  --cuadre-pizarra: #4b5563;
+  --cuadre-niebla: #e7ebf0;
+  --cuadre-marfil: #f8f7f3;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -54,6 +67,49 @@ select:focus,
 textarea:focus {
   outline: none;
   border-color: var(--marca);
+  /* Un halo, no solo el borde. Al enfocar un campo con el pulgar el borde de
+     1,5px se ve poco; el halo dice qué campo está activo de un vistazo. */
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--marca) 16%, transparent);
+}
+
+/* Chrome pinta de amarillo lo que autocompleta. Es el detalle que hace que una
+   app parezca a medio hacer aunque todo lo demás esté cuidado. No hay forma de
+   cambiar ese fondo: se tapa con una sombra interior del color de la tarjeta. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--tarjeta) inset;
+  -webkit-text-fill-color: var(--texto);
+  caret-color: var(--texto);
+  transition: background-color 100000s;
+}
+input:-webkit-autofill:focus {
+  -webkit-box-shadow:
+    0 0 0 1000px var(--tarjeta) inset,
+    0 0 0 3px color-mix(in srgb, var(--marca) 16%, transparent);
+}
+
+/* Se nota poco y se agradece mucho: el botón se hunde al pulsarlo. */
+.boton-primario:active:not(:disabled),
+.boton-secundario:active:not(:disabled) {
+  transform: scale(0.985);
+}
+.boton-primario,
+.boton-secundario {
+  transition:
+    transform 90ms ease,
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .boton-primario,
+  .boton-secundario {
+    transition: none;
+  }
+  .boton-primario:active:not(:disabled),
+  .boton-secundario:active:not(:disabled) {
+    transform: none;
+  }
 }
 
 .mono {
