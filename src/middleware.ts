@@ -32,7 +32,29 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  await supabase.auth.getUser();
+  /**
+   * Refrescar la sesión es una MEJORA, no un requisito. Si Supabase tarda o no
+   * está, la petición sigue: más vale entrar y ver la pantalla de error de la
+   * app, con su botón de reintentar, que un 504 del servidor en todas las
+   * rutas a la vez.
+   *
+   * Esto NO abre ningún agujero: el middleware no vigila nada, solo renueva la
+   * cookie. Quien decide qué se puede leer es RLS en la base, y quien manda al
+   * login es el layout. Sin sesión válida no se ve un dato aunque se pase por
+   * aquí de largo.
+   *
+   * Pasó de verdad: el proyecto de Supabase se pausó y, como este await no
+   * tenía límite, cada petición se quedaba colgada hasta que Vercel la mataba.
+   * La app entera devolvía MIDDLEWARE_INVOCATION_TIMEOUT.
+   */
+  try {
+    await Promise.race([
+      supabase.auth.getUser(),
+      new Promise((_, rechazar) => setTimeout(() => rechazar(new Error("timeout")), 3000)),
+    ]);
+  } catch {
+    /* se sigue con la cookie que ya traía */
+  }
   return response;
 }
 
