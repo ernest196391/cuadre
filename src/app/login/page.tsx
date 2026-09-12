@@ -53,29 +53,37 @@ export default function LoginPage() {
   }
 
   return (
+    /* `escala-envoltorio`: el tamaño base crece con el ancho de la pantalla y
+       todo aquí dentro se mide en `em` contra él. Hay teléfonos que reportan
+       ~1000px de viewport, y ahí una composición clavada a 380px se ve
+       diminuta y perdida en medio del marfil. */
     <main
-      className="flex min-h-[100dvh] flex-col items-center justify-center px-6"
+      className="escala-envoltorio flex min-h-[100dvh] flex-col items-center justify-center"
       style={{
         background: "var(--cuadre-marfil)",
+        paddingInline: "1.5em",
         // Que el notch y la barra de gestos no se coman nada.
-        paddingTop: "calc(env(safe-area-inset-top) + 32px)",
-        paddingBottom: "calc(env(safe-area-inset-bottom) + 32px)",
+        paddingTop: "calc(env(safe-area-inset-top) + 2em)",
+        paddingBottom: "calc(env(safe-area-inset-bottom) + 2em)",
       }}
     >
-      <div className="flex w-full max-w-[380px] flex-col items-center">
-        <LogoCuadre tam={60} fondo="var(--cuadre-marfil)" />
+      <div className="flex w-full flex-col items-center" style={{ maxWidth: "23.75em" }}>
+        <LogoCuadre tam="3.75em" fondo="var(--cuadre-marfil)" />
 
         <p
-          className="mt-3 text-center text-[15px] leading-relaxed"
-          style={{ color: "var(--cuadre-pizarra)" }}
+          className="text-center leading-relaxed"
+          style={{ marginTop: "0.75em", fontSize: "0.94em", color: "var(--cuadre-pizarra)" }}
         >
           Entra para registrar el día.
         </p>
 
         <form
           onSubmit={entrar}
-          className="mt-8 w-full rounded-2xl p-6"
+          className="w-full"
           style={{
+            marginTop: "2em",
+            padding: "1.5em",
+            borderRadius: "1em",
             background: "#FFFFFF",
             border: "1px solid var(--cuadre-niebla)",
             // Sombra muy corta: da relieve sin que parezca una caja flotando.
@@ -85,7 +93,7 @@ export default function LoginPage() {
             ["--marca" as string]: "var(--cuadre-azul)",
           }}
         >
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col" style={{ gap: "1.25em" }}>
             <div>
               <label className="etiqueta" htmlFor="email">
                 Correo
@@ -107,9 +115,16 @@ export default function LoginPage() {
 
             <div>
               {/* La zona tocable llega a 44px como en el resto de la app; el
-                  margen negativo evita que por eso la fila crezca y descuadre
-                  el ritmo con el campo de arriba. */}
-              <div className="mb-1.5 flex items-center justify-between gap-3">
+                  margen vertical negativo la deja sobresalir sin que la fila
+                  crezca y descuadre el ritmo con el campo de arriba. */}
+              <div
+                className="flex items-center justify-between"
+                style={{
+                  gap: "0.75em",
+                  marginBottom: "0.4em",
+                  ["--alto-ver" as string]: "max(44px, 2.6em)",
+                }}
+              >
                 {/* En línea porque `.etiqueta` se declara después de las
                     utilidades de Tailwind y le ganaría a un `mb-0`. */}
                 <label className="etiqueta" htmlFor="clave" style={{ marginBottom: 0 }}>
@@ -118,12 +133,14 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setVerClave((v) => !v)}
-                  className="text-xs font-medium"
+                  className="font-medium"
                   style={{
                     color: "var(--cuadre-azul)",
-                    minHeight: 44,
-                    padding: "0 2px",
-                    margin: "-14px -2px",
+                    fontSize: "0.82em",
+                    minHeight: "var(--alto-ver)",
+                    paddingInline: "0.15em",
+                    marginInline: "-0.15em",
+                    marginBlock: "calc((1.25em - var(--alto-ver)) / 2)",
                   }}
                 >
                   {verClave ? "Ocultar" : "Ver"}
@@ -144,8 +161,11 @@ export default function LoginPage() {
 
             {error && (
               <p
-                className="rounded-xl px-4 py-3 text-sm leading-relaxed"
+                className="leading-relaxed"
                 style={{
+                  fontSize: "0.88em",
+                  padding: "0.85em 1.15em",
+                  borderRadius: "0.85em",
                   background: "rgba(196,61,75,.07)",
                   border: "1px solid rgba(196,61,75,.25)",
                   color: "#A32B38",
@@ -163,7 +183,7 @@ export default function LoginPage() {
               className="boton-primario"
               type="submit"
               disabled={entrando}
-              style={{ background: "var(--cuadre-azul)", minHeight: 52 }}
+              style={{ background: "var(--cuadre-azul)" }}
             >
               {entrando ? "Entrando…" : "Entrar"}
             </button>
@@ -171,8 +191,15 @@ export default function LoginPage() {
         </form>
 
         <p
-          className="mt-8 text-center text-xs leading-relaxed"
-          style={{ color: "var(--cuadre-pizarra)", opacity: 0.75 }}
+          className="text-center leading-relaxed"
+          style={{
+            // Los `em` de un margen se miden contra la fuente del propio
+            // elemento, no contra la base: 2,66 × 0,75 = 2 tamaños base.
+            marginTop: "2.66em",
+            fontSize: "0.75em",
+            color: "var(--cuadre-pizarra)",
+            opacity: 0.75,
+          }}
         >
           Software operativo para negocios de remesas
         </p>

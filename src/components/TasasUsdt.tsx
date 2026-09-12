@@ -84,7 +84,7 @@ export default function TasasUsdt() {
                 {!abierto && (
                   <button
                     className="boton-secundario shrink-0 text-sm"
-                    style={{ minHeight: 44 }}
+                    style={{ minHeight: "2.75rem" }}
                     onClick={() => {
                       setEditando(moneda);
                       setValor("");

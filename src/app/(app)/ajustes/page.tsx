@@ -107,9 +107,9 @@ export default function AjustesPage() {
       <Link
         href="/pedidos"
         className="tarjeta mb-4 flex items-center justify-between gap-3 px-4"
-        style={{ minHeight: 56 }}
+        style={{ minHeight: "3.5rem" }}
       >
-        <span className="text-[15px] font-medium">Ver los pedidos recibidos</span>
+        <span className="text-[0.9375rem] font-medium">Ver los pedidos recibidos</span>
         <span className="text-sm" style={{ color: "var(--texto-suave)" }}>
           ›
         </span>
@@ -197,7 +197,7 @@ export default function AjustesPage() {
           {claves.map((c) => (
             <li key={c.id} className="tarjeta p-4" style={{ opacity: c.revoked_at ? 0.55 : 1 }}>
               <div className="mb-1 flex items-start justify-between gap-3">
-                <p className="min-w-0 truncate text-[15px] font-medium">{c.name}</p>
+                <p className="min-w-0 truncate text-[0.9375rem] font-medium">{c.name}</p>
                 {c.revoked_at ? (
                   <span className="shrink-0 text-xs" style={{ color: "var(--texto-suave)" }}>
                     Revocada
@@ -205,7 +205,7 @@ export default function AjustesPage() {
                 ) : (
                   <button
                     className="boton-secundario shrink-0 text-sm"
-                    style={{ minHeight: 44 }}
+                    style={{ minHeight: "2.75rem" }}
                     onClick={() => revocar(c.id)}
                     type="button"
                   >

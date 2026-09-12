@@ -31,6 +31,21 @@
   box-sizing: border-box;
 }
 
+/* ── Escala de toda la app ──────────────────────────────────────────────────
+   Hay teléfonos que reportan ~1000px de viewport —de fábrica, o con el «sitio
+   de escritorio» puesto en Chrome— y ahí una interfaz medida para 412px se ve
+   diminuta y perdida. Como las utilidades de Tailwind están todas en `rem`,
+   mover el tamaño de fuente raíz escala tipografía, espaciado y anchos de una
+   sola pieza, sin tocar ni una pantalla.
+
+   Por debajo de 667px manda el suelo, que es el tamaño de letra que el propio
+   navegador trae puesto —16px salvo que la persona lo haya cambiado—: en un
+   teléfono normal no cambia absolutamente nada. Va en `rem` y no en píxeles
+   precisamente para no pisar a quien tenga la letra agrandada por necesidad. */
+html {
+  font-size: clamp(1rem, 2.4vw, 1.625rem);
+}
+
 body {
   margin: 0;
   background: var(--fondo);
@@ -41,13 +56,14 @@ body {
   overflow-x: hidden;
 }
 
-/* Todo lo que se toca llega a 44px. Se usa a diario, de pie, con prisa. */
+/* Todo lo que se toca llega a 44px. Se usa a diario, de pie, con prisa.
+   En `rem` para que crezca con la escala; 2,75rem nunca baja de esos 44px. */
 input,
 select,
 textarea,
 button,
 a.boton {
-  min-height: 44px;
+  min-height: 2.75rem;
 }
 
 input,
@@ -55,11 +71,12 @@ select,
 textarea {
   width: 100%;
   border: 1.5px solid var(--linea);
-  border-radius: 12px;
+  border-radius: 0.75rem;
   background: var(--tarjeta);
-  padding: 11px 14px;
-  /* 16px evita que iOS haga zoom al enfocar el campo. */
-  font-size: 16px;
+  padding: 0.6875rem 0.875rem;
+  /* 1rem nunca baja de 16px, que es lo que evita que iOS haga zoom al
+     enfocar el campo. */
+  font-size: 1rem;
   color: var(--texto);
 }
 input:focus,
@@ -87,6 +104,30 @@ input:-webkit-autofill:focus {
   -webkit-box-shadow:
     0 0 0 1000px var(--tarjeta) inset,
     0 0 0 3px color-mix(in srgb, var(--marca) 16%, transparent);
+}
+
+/* ── Pantallas de envoltorio (entrar, sin conexión) ────────────────────────
+   Las de dentro de la app se miden en `rem` gracias a Tailwind; estas dos no
+   usan Tailwind para los tamaños, así que se miden en `em` contra este bloque
+   —que toma la escala de la raíz— y así crecen de una pieza con el resto. */
+.escala-envoltorio {
+  font-size: 1rem;
+}
+.escala-envoltorio input {
+  font-size: 1em;
+  padding: 0.7em 0.9em;
+  border-radius: 0.75em;
+  border-width: max(1.5px, 0.09em);
+}
+.escala-envoltorio .boton-primario {
+  font-size: 1em;
+  border-radius: 0.75em;
+  /* Algo más alto que el resto de botones: es el único de la pantalla. */
+  min-height: 3.3em;
+}
+.escala-envoltorio .etiqueta {
+  font-size: 0.82em;
+  margin-bottom: 0.4em;
 }
 
 /* Se nota poco y se agradece mucho: el botón se hunde al pulsarlo. */
@@ -119,20 +160,20 @@ input:-webkit-autofill:focus {
 .tarjeta {
   background: var(--tarjeta);
   border: 1px solid var(--linea);
-  border-radius: 16px;
+  border-radius: 1rem;
 }
 
 .boton-primario {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 0.5rem;
   width: 100%;
   border: none;
-  border-radius: 12px;
+  border-radius: 0.75rem;
   background: var(--marca);
   color: #fff;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
 }
@@ -145,21 +186,21 @@ input:-webkit-autofill:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 0.5rem;
   border: 1.5px solid var(--linea);
-  border-radius: 12px;
+  border-radius: 0.75rem;
   background: var(--tarjeta);
   color: var(--texto);
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
-  padding: 0 16px;
+  padding: 0 1rem;
   cursor: pointer;
 }
 
 .etiqueta {
   display: block;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: var(--texto-suave);
-  margin-bottom: 6px;
+  margin-bottom: 0.375rem;
 }

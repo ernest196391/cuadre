@@ -92,7 +92,7 @@ export default function BotonInstalar() {
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[15px] font-semibold">Ten Cuadre a mano</p>
+          <p className="text-[0.9375rem] font-semibold">Ten Cuadre a mano</p>
           <p className="mt-0.5 text-xs" style={{ color: "var(--texto-suave)" }}>
             Se abre como una app, a pantalla completa, desde tu inicio.
           </p>
@@ -101,7 +101,7 @@ export default function BotonInstalar() {
           className="shrink-0 text-sm font-medium"
           type="button"
           onClick={descartar}
-          style={{ color: "var(--texto-suave)", minHeight: 44 }}
+          style={{ color: "var(--texto-suave)", minHeight: "2.75rem" }}
           aria-label="No instalar"
         >
           Ahora no

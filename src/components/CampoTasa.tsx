@@ -54,7 +54,7 @@ export default function CampoTasa({
               aria-pressed={activa}
               className="mono rounded-xl px-2 text-xs font-medium"
               style={{
-                minHeight: 44,
+                minHeight: "2.75rem",
                 border: `1.5px solid ${activa ? "var(--marca)" : "var(--linea)"}`,
                 color: activa ? "var(--marca)" : "var(--texto-suave)",
                 background: activa ? "color-mix(in srgb, var(--marca) 7%, white)" : "var(--tarjeta)",

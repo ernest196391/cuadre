@@ -296,7 +296,7 @@ export default function MetodosPage() {
               >
                 <div className="mb-2 flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-[15px] font-semibold">{m.label}</p>
+                    <p className="text-[0.9375rem] font-semibold">{m.label}</p>
                     {m.note && (
                       <p className="text-xs" style={{ color: "var(--texto-suave)" }}>
                         {m.note}
@@ -307,7 +307,7 @@ export default function MetodosPage() {
                     <button
                       className="shrink-0 rounded-full px-3 text-xs font-semibold"
                       style={{
-                        minHeight: 44,
+                        minHeight: "2.75rem",
                         border: `1.5px solid ${m.active ? "#1E7A4B" : "var(--linea)"}`,
                         color: m.active ? "#1E7A4B" : "var(--texto-suave)",
                         background: m.active ? "rgba(30,122,75,.09)" : "var(--tarjeta)",

@@ -162,7 +162,7 @@ export default function EditarCuenta({
             className="text-sm font-medium"
             type="button"
             onClick={() => setConfirmarBaja(true)}
-            style={{ color: "#b3261e", minHeight: 44 }}
+            style={{ color: "#b3261e", minHeight: "2.75rem" }}
           >
             Dar de baja esta tarjeta
           </button>

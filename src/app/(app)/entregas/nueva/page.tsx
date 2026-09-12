@@ -361,12 +361,12 @@ export default function NuevaEntregaPage() {
                   aria-pressed={activa}
                   className="flex w-full flex-col items-start gap-0.5 rounded-xl px-4 py-2.5 text-left"
                   style={{
-                    minHeight: 52,
+                    minHeight: "3.25rem",
                     border: `1.5px solid ${activa ? "var(--marca)" : "var(--linea)"}`,
                     background: activa ? "color-mix(in srgb, var(--marca) 7%, white)" : "var(--tarjeta)",
                   }}
                 >
-                  <span className="text-[15px] font-semibold">{m.label}</span>
+                  <span className="text-[0.9375rem] font-semibold">{m.label}</span>
                   <span className="mono text-xs" style={{ color: "var(--texto-suave)" }}>
                     {tasaLegible(m.rate, m.target_currency, monedaOrigen)}
                   </span>
@@ -474,12 +474,12 @@ export default function NuevaEntregaPage() {
                     aria-pressed={activa}
                     className="flex flex-col items-start gap-0.5 rounded-xl px-3 py-2.5 text-left"
                     style={{
-                      minHeight: 60,
+                      minHeight: "3.75rem",
                       border: `1.5px solid ${activa ? "var(--marca)" : "var(--linea)"}`,
                       background: activa ? "color-mix(in srgb, var(--marca) 7%, white)" : "var(--tarjeta)",
                     }}
                   >
-                    <span className="truncate text-[15px] font-semibold">{t.full_name}</span>
+                    <span className="truncate text-[0.9375rem] font-semibold">{t.full_name}</span>
                     <span className="mono text-xs" style={{ color: "var(--texto-suave)" }}>
                       {suya > 0 ? `comisión ${formatearUsd(suya)} USD` : "sin comisión"}
                     </span>
@@ -523,7 +523,7 @@ export default function NuevaEntregaPage() {
         <button
           type="button"
           className="text-left text-sm font-medium"
-          style={{ color: "var(--marca)", minHeight: 44 }}
+          style={{ color: "var(--marca)", minHeight: "2.75rem" }}
           onClick={() => setMasDetalles((v) => !v)}
         >
           {masDetalles ? "− Menos detalles" : "+ Más detalles (fees, mensajero, notas)"}

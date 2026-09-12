@@ -237,7 +237,7 @@ export default function ContactoPage({ params }: { params: { id: string } }) {
       <Link
         href="/contactos"
         className="mb-1 -ml-1 inline-flex items-center px-1 text-sm"
-        style={{ color: "var(--texto-suave)", minHeight: 44 }}
+        style={{ color: "var(--texto-suave)", minHeight: "2.75rem" }}
       >
         ‹ Contactos
       </Link>
@@ -248,7 +248,7 @@ export default function ContactoPage({ params }: { params: { id: string } }) {
             className="shrink-0 text-sm font-medium"
             type="button"
             onClick={() => setEditandoContacto(true)}
-            style={{ color: "var(--marca)", minHeight: 44 }}
+            style={{ color: "var(--marca)", minHeight: "2.75rem" }}
           >
             Editar
           </button>
@@ -263,7 +263,7 @@ export default function ContactoPage({ params }: { params: { id: string } }) {
           <button
             className="text-xs font-medium"
             type="button"
-            style={{ color: "var(--marca)", minHeight: 44 }}
+            style={{ color: "var(--marca)", minHeight: "2.75rem" }}
             onClick={async () => {
               try {
                 await navigator.clipboard.writeText(contacto.phone ?? "");
@@ -338,7 +338,7 @@ export default function ContactoPage({ params }: { params: { id: string } }) {
         </h2>
         <button
           className="text-sm font-medium"
-          style={{ color: "var(--marca)", minHeight: 44 }}
+          style={{ color: "var(--marca)", minHeight: "2.75rem" }}
           onClick={() => setFormCuenta((v) => !v)}
           type="button"
         >
@@ -412,13 +412,13 @@ export default function ContactoPage({ params }: { params: { id: string } }) {
           {cuentas.map((c) => (
             <li key={c.id} className="tarjeta p-4">
               <div className="flex items-start justify-between gap-3">
-                <p className="min-w-0 text-[15px] font-medium">{c.alias}</p>
+                <p className="min-w-0 text-[0.9375rem] font-medium">{c.alias}</p>
                 {editandoCuenta !== c.id && (
                   <button
                     className="shrink-0 text-sm font-medium"
                     type="button"
                     onClick={() => setEditandoCuenta(c.id)}
-                    style={{ color: "var(--marca)", minHeight: 44 }}
+                    style={{ color: "var(--marca)", minHeight: "2.75rem" }}
                   >
                     Editar
                   </button>
@@ -436,7 +436,7 @@ export default function ContactoPage({ params }: { params: { id: string } }) {
                 {revelado[c.id] ? (
                   <button
                     className="boton-secundario shrink-0 text-sm"
-                    style={{ minHeight: 44 }}
+                    style={{ minHeight: "2.75rem" }}
                     onClick={() => ocultar(c.id)}
                     type="button"
                   >
@@ -445,7 +445,7 @@ export default function ContactoPage({ params }: { params: { id: string } }) {
                 ) : (
                   <button
                     className="boton-secundario shrink-0 text-sm"
-                    style={{ minHeight: 44 }}
+                    style={{ minHeight: "2.75rem" }}
                     onClick={() => revelar(c.id)}
                     disabled={revelando === c.id}
                     type="button"
@@ -461,7 +461,7 @@ export default function ContactoPage({ params }: { params: { id: string } }) {
                   </p>
                   <button
                     className="shrink-0 text-xs font-medium"
-                    style={{ color: "var(--marca)", minHeight: 44 }}
+                    style={{ color: "var(--marca)", minHeight: "2.75rem" }}
                     type="button"
                     onClick={async () => {
                       try {

@@ -163,7 +163,7 @@ export default function AjustesComisiones() {
       )}
 
       <form onSubmit={guardarGlobal} className="tarjeta mb-4 p-4">
-        <p className="mb-3 text-[15px] font-semibold">Para todo el equipo</p>
+        <p className="mb-3 text-[0.9375rem] font-semibold">Para todo el equipo</p>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="etiqueta" htmlFor="g-entregar">
@@ -205,7 +205,7 @@ export default function AjustesComisiones() {
         </button>
       </form>
 
-      <p className="mb-2 text-[15px] font-semibold">Persona por persona</p>
+      <p className="mb-2 text-[0.9375rem] font-semibold">Persona por persona</p>
 
       {cargando ? (
         <p className="py-4 text-center text-sm" style={{ color: "var(--texto-suave)" }}>
@@ -221,7 +221,7 @@ export default function AjustesComisiones() {
               <li key={p.contact_id} className="tarjeta p-4" style={p.active ? undefined : { opacity: 0.6 }}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-[15px] font-medium">{p.full_name}</p>
+                    <p className="text-[0.9375rem] font-medium">{p.full_name}</p>
                     <p className="mono text-xs" style={{ color: "var(--texto-suave)" }}>
                       entregar {formatearPct(entregar)}%
                       {esHeredado("delivery", p) && " (del equipo)"} · conseguir {formatearPct(conseguir)}%
@@ -231,7 +231,7 @@ export default function AjustesComisiones() {
                   {!abierto && (
                     <button
                       className="boton-secundario shrink-0 text-sm"
-                      style={{ minHeight: 44 }}
+                      style={{ minHeight: "2.75rem" }}
                       type="button"
                       onClick={() => {
                         setEditando(p.contact_id);

@@ -160,7 +160,7 @@ export default function ContactosPage() {
                     aria-pressed={activo}
                     className="rounded-full px-4 text-sm font-medium"
                     style={{
-                      minHeight: 44,
+                      minHeight: "2.75rem",
                       border: `1.5px solid ${activo ? "var(--marca)" : "var(--linea)"}`,
                       color: activo ? "var(--marca)" : "var(--texto-suave)",
                       background: activo ? "color-mix(in srgb, var(--marca) 7%, white)" : "var(--tarjeta)",
@@ -218,10 +218,10 @@ export default function ContactosPage() {
               <Link
                 href={`/contactos/${c.id}`}
                 className="tarjeta flex items-center justify-between gap-3 p-4"
-                style={{ minHeight: 64 }}
+                style={{ minHeight: "4rem" }}
               >
                 <div className="min-w-0">
-                  <p className="truncate text-[15px] font-medium">{c.full_name}</p>
+                  <p className="truncate text-[0.9375rem] font-medium">{c.full_name}</p>
                   <p className="truncate text-xs" style={{ color: "var(--texto-suave)" }}>
                     {c.contact_roles.map((r) => ROLES.find((x) => x.valor === r.role)?.etiqueta).filter(Boolean).join(" · ") ||
                       "Sin etiquetar"}

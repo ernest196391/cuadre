@@ -85,17 +85,17 @@ export default function HoyPage() {
       <BotonInstalar />
 
       <div className="mb-5 grid grid-cols-3 gap-2">
-        <Link href="/entregas/nueva" className="boton-primario boton-primario-alto" style={{ minHeight: 64 }}>
+        <Link href="/entregas/nueva" className="boton-primario boton-primario-alto" style={{ minHeight: "4rem" }}>
           + Entrega
         </Link>
         <Link
           href="/compras/nueva"
           className="boton-secundario"
-          style={{ minHeight: 64 }}
+          style={{ minHeight: "4rem" }}
         >
           + Compra
         </Link>
-        <Link href="/contactos" className="boton-secundario" style={{ minHeight: 64 }}>
+        <Link href="/contactos" className="boton-secundario" style={{ minHeight: "4rem" }}>
           Contactos
         </Link>
       </div>
@@ -126,10 +126,10 @@ export default function HoyPage() {
         <Link
           href="/pedidos"
           className="mb-3 flex items-center justify-between gap-3 rounded-2xl px-4 py-3"
-          style={{ background: "rgba(36,107,206,.08)", border: "1.5px solid rgba(36,107,206,.35)", minHeight: 56 }}
+          style={{ background: "rgba(36,107,206,.08)", border: "1.5px solid rgba(36,107,206,.35)", minHeight: "3.5rem" }}
         >
           <div className="min-w-0">
-            <p className="text-[15px] font-semibold" style={{ color: "#246BCE" }}>
+            <p className="text-[0.9375rem] font-semibold" style={{ color: "#246BCE" }}>
               {pedidosPendientes} {pedidosPendientes === 1 ? "pedido" : "pedidos"} de la web sin atender
             </p>
             <p className="text-xs" style={{ color: "var(--texto-suave)" }}>
@@ -145,10 +145,10 @@ export default function HoyPage() {
       <Link
         href="/metodos"
         className="tarjeta mb-5 flex items-center justify-between gap-3 px-4"
-        style={{ minHeight: 56 }}
+        style={{ minHeight: "3.5rem" }}
       >
         <div className="min-w-0">
-          <p className="text-[15px] font-medium">Tasas</p>
+          <p className="text-[0.9375rem] font-medium">Tasas</p>
           <p className="truncate text-xs" style={{ color: "var(--texto-suave)" }}>
             {metodos.filter((m) => m.active).length} métodos activos
           </p>
@@ -163,7 +163,7 @@ export default function HoyPage() {
           Entregas de hoy
         </h2>
         <Link href="/entregas" className="flex items-center text-sm font-medium"
-              style={{ color: "var(--marca)", minHeight: 44 }}>
+              style={{ color: "var(--marca)", minHeight: "2.75rem" }}>
           Ver todas
         </Link>
       </div>
@@ -197,7 +197,7 @@ export default function HoyPage() {
               <Link
                 href={`/entregas/${e.id}`}
                 className="tarjeta flex items-center justify-between gap-3 p-4"
-                style={{ minHeight: 56 }}
+                style={{ minHeight: "3.5rem" }}
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{e.contacts?.full_name ?? "Sin cliente"}</p>
@@ -225,7 +225,7 @@ export default function HoyPage() {
 function Resumen({ titulo, valor }: { titulo: string; valor: string }) {
   return (
     <div className="px-3 py-4 text-center">
-      <p className="mb-1 text-[11px]" style={{ color: "var(--texto-suave)" }}>
+      <p className="mb-1 text-[0.6875rem]" style={{ color: "var(--texto-suave)" }}>
         {titulo}
       </p>
       <p className="mono text-base font-semibold">{valor}</p>

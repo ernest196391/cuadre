@@ -94,7 +94,7 @@ export default function ComprasPage() {
       <div className="mb-4 flex items-baseline justify-between gap-3">
         <h1 className="text-xl font-semibold">Compras</h1>
         <Link href="/compras/nueva" className="flex items-center text-sm font-medium"
-              style={{ color: "var(--marca)", minHeight: 44 }}>
+              style={{ color: "var(--marca)", minHeight: "2.75rem" }}>
           + Nueva
         </Link>
       </div>
@@ -132,7 +132,7 @@ export default function ComprasPage() {
             return (
               <li key={c.id} className="tarjeta p-4" style={{ opacity: anulada ? 0.55 : 1 }}>
                 <div className="mb-1 flex items-baseline justify-between gap-3">
-                  <p className="mono text-[15px] font-semibold"
+                  <p className="mono text-[0.9375rem] font-semibold"
                      style={anulada ? { textDecoration: "line-through" } : undefined}>
                     {formatearUsdt(Number(c.usdt_received))} USDT
                   </p>
@@ -218,7 +218,7 @@ export default function ComprasPage() {
 function Resumen({ titulo, valor }: { titulo: string; valor: string }) {
   return (
     <div className="px-2 py-4 text-center">
-      <p className="mb-1 text-[11px]" style={{ color: "var(--texto-suave)" }}>
+      <p className="mb-1 text-[0.6875rem]" style={{ color: "var(--texto-suave)" }}>
         {titulo}
       </p>
       <p className="mono text-sm font-semibold">{valor}</p>

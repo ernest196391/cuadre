@@ -180,7 +180,7 @@ export default function CobrosPage() {
               {misPendientes.map((p) => (
                 <li key={p.contact_id} className="tarjeta p-4">
                   <div className="mb-2 flex items-baseline justify-between gap-3">
-                    <p className="text-[15px] font-semibold">{nombres[p.contact_id] ?? "—"}</p>
+                    <p className="text-[0.9375rem] font-semibold">{nombres[p.contact_id] ?? "—"}</p>
                     <p className="mono text-xl font-semibold" style={{ color: "var(--marca)" }}>
                       {formatearUsd(Number(p.total_usd))} USD
                     </p>
@@ -208,7 +208,7 @@ export default function CobrosPage() {
                 {porResolver.map((s) => (
                   <li key={s.id} className="tarjeta p-4">
                     <div className="mb-1 flex items-baseline justify-between gap-3">
-                      <p className="text-[15px] font-semibold">{nombres[s.contact_id] ?? "—"}</p>
+                      <p className="text-[0.9375rem] font-semibold">{nombres[s.contact_id] ?? "—"}</p>
                       <p className="mono text-lg font-semibold">{formatearUsd(Number(s.amount_usd))} USD</p>
                     </div>
                     <p className="text-xs" style={{ color: "var(--texto-suave)" }}>
@@ -243,7 +243,7 @@ export default function CobrosPage() {
                               aria-pressed={forma === f}
                               className="rounded-full px-4 text-sm font-medium"
                               style={{
-                                minHeight: 44,
+                                minHeight: "2.75rem",
                                 border: `1.5px solid ${forma === f ? "var(--marca)" : "var(--linea)"}`,
                                 color: forma === f ? "var(--marca)" : "var(--texto-suave)",
                                 background: forma === f ? "color-mix(in srgb, var(--marca) 7%, white)" : "var(--tarjeta)",

@@ -113,7 +113,7 @@ export default function EntregasPage() {
             aria-pressed={rango === r.clave}
             className="flex-1 rounded-full text-sm font-medium"
             style={{
-              minHeight: 44,
+              minHeight: "2.75rem",
               border: `1.5px solid ${rango === r.clave ? "var(--marca)" : "var(--linea)"}`,
               color: rango === r.clave ? "var(--marca)" : "var(--texto-suave)",
               background: rango === r.clave ? "color-mix(in srgb, var(--marca) 7%, white)" : "var(--tarjeta)",
@@ -171,7 +171,7 @@ export default function EntregasPage() {
                     <Link
                       href={`/entregas/${f.id}`}
                       className="tarjeta flex items-center justify-between gap-3 p-4"
-                      style={{ minHeight: 56, opacity: f.voided_at ? 0.5 : 1 }}
+                      style={{ minHeight: "3.5rem", opacity: f.voided_at ? 0.5 : 1 }}
                     >
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">
@@ -223,7 +223,7 @@ export default function EntregasPage() {
 function Resumen({ titulo, valor }: { titulo: string; valor: string }) {
   return (
     <div className="px-3 py-4 text-center">
-      <p className="mb-1 text-[11px]" style={{ color: "var(--texto-suave)" }}>
+      <p className="mb-1 text-[0.6875rem]" style={{ color: "var(--texto-suave)" }}>
         {titulo}
       </p>
       <p className="mono text-base font-semibold">{valor}</p>

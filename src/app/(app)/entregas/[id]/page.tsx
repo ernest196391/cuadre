@@ -53,7 +53,7 @@ function Dato({ etiqueta, valor, fuerte }: { etiqueta: string; valor: React.Reac
       <span className="shrink-0 text-sm" style={{ color: "var(--texto-suave)" }}>
         {etiqueta}
       </span>
-      <span className={`mono min-w-0 text-right ${fuerte ? "text-[15px] font-semibold" : "text-sm"}`}>
+      <span className={`mono min-w-0 text-right ${fuerte ? "text-[0.9375rem] font-semibold" : "text-sm"}`}>
         {valor}
       </span>
     </div>
@@ -188,7 +188,7 @@ export default function EntregaPage({ params }: { params: { id: string } }) {
       <Link
         href="/entregas"
         className="mb-3 inline-flex items-center text-sm font-medium"
-        style={{ color: "var(--texto-suave)", minHeight: 44 }}
+        style={{ color: "var(--texto-suave)", minHeight: "2.75rem" }}
       >
         ‹ Entregas
       </Link>
@@ -305,7 +305,7 @@ export default function EntregaPage({ params }: { params: { id: string } }) {
       ) : esDueno ? (
         anulando ? (
           <div className="tarjeta p-4">
-            <p className="mb-1 text-[15px] font-semibold">Anular esta entrega</p>
+            <p className="mb-1 text-[0.9375rem] font-semibold">Anular esta entrega</p>
             <p className="mb-3 text-xs" style={{ color: "var(--texto-suave)" }}>
               No se borra: deja de contar en las cuentas y queda marcada con el motivo. Si generó
               comisión sin cobrar, se deshace.

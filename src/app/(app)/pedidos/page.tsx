@@ -121,7 +121,7 @@ export default function PedidosPage() {
           className="shrink-0 text-sm font-medium"
           type="button"
           onClick={() => setVerTodos((v) => !v)}
-          style={{ color: "var(--marca)", minHeight: 44 }}
+          style={{ color: "var(--marca)", minHeight: "2.75rem" }}
         >
           {verTodos ? "Solo pendientes" : "Ver todos"}
         </button>
@@ -164,7 +164,7 @@ export default function PedidosPage() {
             return (
               <li key={p.id} className="tarjeta p-4" style={{ opacity: atendido ? 0.6 : 1 }}>
                 <div className="mb-1 flex items-start justify-between gap-3">
-                  <p className="min-w-0 truncate text-[15px] font-semibold">{nombre ?? "Sin nombre"}</p>
+                  <p className="min-w-0 truncate text-[0.9375rem] font-semibold">{nombre ?? "Sin nombre"}</p>
                   {origen != null && (
                     <p className="mono shrink-0 text-sm font-semibold">
                       {formatearMonto(origen, monedaBase)} {monedaBase}
@@ -214,14 +214,14 @@ export default function PedidosPage() {
                   className="mt-2 text-xs font-medium"
                   type="button"
                   onClick={() => setAbierto(viendoJson ? null : p.id)}
-                  style={{ color: "var(--marca)", minHeight: 44 }}
+                  style={{ color: "var(--marca)", minHeight: "2.75rem" }}
                 >
                   {viendoJson ? "Ocultar lo que llegó" : "Ver lo que llegó"}
                 </button>
 
                 {viendoJson && (
                   <pre
-                    className="mono mt-1 overflow-x-auto rounded-lg p-3 text-[11px]"
+                    className="mono mt-1 overflow-x-auto rounded-lg p-3 text-[0.6875rem]"
                     style={{ background: "var(--fondo)", border: "1px solid var(--linea)" }}
                   >
                     {JSON.stringify(p.payload, null, 2)}

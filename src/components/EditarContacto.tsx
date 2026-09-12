@@ -157,7 +157,7 @@ export default function EditarContacto({
             className="text-sm font-medium"
             type="button"
             onClick={() => setConfirmarBaja(true)}
-            style={{ color: contacto.active ? "#b3261e" : "var(--marca)", minHeight: 44 }}
+            style={{ color: contacto.active ? "#b3261e" : "var(--marca)", minHeight: "2.75rem" }}
           >
             {contacto.active ? "Dar de baja este contacto" : "Reactivar este contacto"}
           </button>

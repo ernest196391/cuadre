@@ -58,39 +58,41 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         } as React.CSSProperties
       }
     >
-      <header
-        className="flex items-center justify-between gap-3 px-5 py-3"
-        style={{ background: "var(--tarjeta)", borderBottom: "1px solid var(--linea)" }}
-      >
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="h-6 w-1.5 shrink-0 rounded-full" style={{ background: "var(--marca)" }} />
-          <span className="truncate text-base font-semibold">{tenant.brand_name}</span>
-        </div>
-        <div className="flex shrink-0 items-center gap-3">
-          {perfil.role === "owner" && (
-            <Link
-              href="/ajustes"
-              className="flex items-center text-sm font-medium"
-              style={{ color: "var(--texto-suave)", minHeight: 44 }}
+      {/* La franja blanca cruza de borde a borde, pero lo que lleva dentro se
+          alinea con la columna del contenido: en una pantalla ancha, si no, el
+          nombre del negocio se queda solo en una esquina. */}
+      <header style={{ background: "var(--tarjeta)", borderBottom: "1px solid var(--linea)" }}>
+        <div className="mx-auto flex max-w-lg items-center justify-between gap-3 px-5 py-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="h-6 w-1.5 shrink-0 rounded-full" style={{ background: "var(--marca)" }} />
+            <span className="truncate text-base font-semibold">{tenant.brand_name}</span>
+          </div>
+          <div className="flex shrink-0 items-center gap-3">
+            {perfil.role === "owner" && (
+              <Link
+                href="/ajustes"
+                className="flex items-center text-sm font-medium"
+                style={{ color: "var(--texto-suave)", minHeight: "2.75rem" }}
+              >
+                Ajustes
+              </Link>
+            )}
+            <button
+              className="text-sm font-medium"
+              style={{ color: "var(--marca)", minHeight: "2.75rem" }}
+              onClick={salir}
+              type="button"
             >
-              Ajustes
-            </Link>
-          )}
-          <button
-            className="text-sm font-medium"
-            style={{ color: "var(--marca)", minHeight: 44 }}
-            onClick={salir}
-            type="button"
-          >
-            Salir
-          </button>
+              Salir
+            </button>
+          </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-lg px-5 pb-28 pt-5">{children}</main>
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-20 flex"
+        className="fixed inset-x-0 bottom-0 z-20"
         style={{
           background: "var(--tarjeta)",
           borderTop: "1px solid var(--linea)",
@@ -98,23 +100,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         }}
         aria-label="Navegación"
       >
-        {PESTANAS.map((p) => {
-          const activa = pathname === p.href;
-          return (
-            <Link
-              key={p.href}
-              href={p.href}
-              className="flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium"
-              style={{ minHeight: 56, color: activa ? "var(--marca)" : "var(--texto-suave)" }}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
-                   strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-                <path d={p.icono} />
-              </svg>
-              {p.etiqueta}
-            </Link>
-          );
-        })}
+        <div className="mx-auto flex max-w-lg">
+          {PESTANAS.map((p) => {
+            const activa = pathname === p.href;
+            return (
+              <Link
+                key={p.href}
+                href={p.href}
+                className="flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[0.6875rem] font-medium"
+                style={{ minHeight: "3.5rem", color: activa ? "var(--marca)" : "var(--texto-suave)" }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+                     strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                  <path d={p.icono} />
+                </svg>
+                {p.etiqueta}
+              </Link>
+            );
+          })}
+        </div>
       </nav>
     </div>
   );

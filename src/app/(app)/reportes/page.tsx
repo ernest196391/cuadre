@@ -138,9 +138,9 @@ export default function ReportesPage() {
               setDesplazamiento(0);
             }}
             aria-pressed={periodo === p}
-            className="rounded-xl text-[15px] font-semibold capitalize"
+            className="rounded-xl text-[0.9375rem] font-semibold capitalize"
             style={{
-              minHeight: 44,
+              minHeight: "2.75rem",
               border: `1.5px solid ${periodo === p ? "var(--marca)" : "var(--linea)"}`,
               color: periodo === p ? "var(--marca)" : "var(--texto-suave)",
               background: periodo === p ? "color-mix(in srgb, var(--marca) 7%, white)" : "var(--tarjeta)",
@@ -154,7 +154,7 @@ export default function ReportesPage() {
       <div className="mb-5 flex items-center justify-between gap-2">
         <button
           className="boton-secundario px-4"
-          style={{ minHeight: 44 }}
+          style={{ minHeight: "2.75rem" }}
           onClick={() => setDesplazamiento((d) => d - 1)}
           type="button"
           aria-label="Período anterior"
@@ -164,7 +164,7 @@ export default function ReportesPage() {
         <span className="text-sm font-medium capitalize">{etiquetaRango}</span>
         <button
           className="boton-secundario px-4"
-          style={{ minHeight: 44, opacity: desplazamiento >= 0 ? 0.4 : 1 }}
+          style={{ minHeight: "2.75rem", opacity: desplazamiento >= 0 ? 0.4 : 1 }}
           onClick={() => setDesplazamiento((d) => Math.min(0, d + 1))}
           disabled={desplazamiento >= 0}
           type="button"
@@ -236,7 +236,7 @@ export default function ReportesPage() {
           <ul className="mb-5 flex flex-col gap-2">
             {metodosOrdenados.map((g) => (
               <li key={g.clave} className="tarjeta p-4">
-                <p className="mb-2 text-[15px] font-medium">
+                <p className="mb-2 text-[0.9375rem] font-medium">
                   {metodos.find((m) => m.id === g.clave)?.label ?? "Sin método"}
                 </p>
                 <div className="grid grid-cols-2 gap-3">
@@ -260,7 +260,7 @@ export default function ReportesPage() {
             {responsables.map((g) => (
               <li key={g.clave} className="tarjeta flex items-center justify-between gap-3 p-4">
                 <div className="min-w-0">
-                  <p className="truncate text-[15px] font-medium">{nombres[g.clave] ?? "—"}</p>
+                  <p className="truncate text-[0.9375rem] font-medium">{nombres[g.clave] ?? "—"}</p>
                   <p className="text-xs" style={{ color: "var(--texto-suave)" }}>
                     {g.totales.entregas} {g.totales.entregas === 1 ? "entrega" : "entregas"} · comisión{" "}
                     {formatearMonto(g.totales.comisiones, moneda)} {moneda}
@@ -299,7 +299,7 @@ function Linea({
 function Mini({ titulo, valor }: { titulo: string; valor: string }) {
   return (
     <div>
-      <p className="text-[11px]" style={{ color: "var(--texto-suave)" }}>
+      <p className="text-[0.6875rem]" style={{ color: "var(--texto-suave)" }}>
         {titulo}
       </p>
       <p className="mono text-sm font-semibold">{valor}</p>
