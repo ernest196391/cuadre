@@ -7,6 +7,7 @@ import { useSesion } from "@/lib/sesion";
 import { formatearMonto, formatearFechaHora } from "@/lib/format";
 import { guardarParaRepetir, guardarPedidoDeOrigen } from "@/lib/repetir";
 import Seguimiento from "@/components/Seguimiento";
+import ClienteDeLaWeb from "@/components/ClienteDeLaWeb";
 
 interface Pedido {
   id: string;
@@ -238,6 +239,10 @@ export default function PedidosPage() {
                       .join(" · ")}
                   </p>
                 )}
+
+                {/* Si lo pidió alguien con cuenta, aquí se ve si está verificado y a
+                    quién hay que entregarle. Si no la tiene, no sale nada. */}
+                {p.external_ref && <ClienteDeLaWeb referencia={p.external_ref} />}
 
                 {esTienda && texto(p.payload, "recipient_name") && (
                   <p className="mt-1 text-xs" style={{ color: "var(--texto-suave)" }}>

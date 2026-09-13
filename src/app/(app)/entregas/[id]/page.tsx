@@ -10,6 +10,7 @@ import { tasaLegible } from "@/lib/tasas";
 import { formatearUsd } from "@/lib/comisiones";
 import { guardarParaRepetir } from "@/lib/repetir";
 import Seguimiento from "@/components/Seguimiento";
+import ClienteDeLaWeb from "@/components/ClienteDeLaWeb";
 
 interface Entrega {
   id: string;
@@ -265,6 +266,10 @@ export default function EntregaPage({ params }: { params: { id: string } }) {
           />
         )}
       </div>
+
+      {entrega.inbound_orders?.external_ref && (
+        <ClienteDeLaWeb referencia={entrega.inbound_orders.external_ref} />
+      )}
 
       {/* Solo si vino de un pedido de la web: el seguimiento es lo que ve el
           cliente en su cuenta, y una entrega apuntada a mano aquí no tiene a
