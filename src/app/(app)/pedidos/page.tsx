@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase/client";
 import { useSesion } from "@/lib/sesion";
 import { formatearMonto, formatearFechaHora } from "@/lib/format";
 import { guardarParaRepetir, guardarPedidoDeOrigen } from "@/lib/repetir";
+import Seguimiento from "@/components/Seguimiento";
 
 interface Pedido {
   id: string;
@@ -51,6 +52,10 @@ export default function PedidosPage() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [abierto, setAbierto] = useState<string | null>(null);
+  // El seguimiento se carga solo cuando alguien lo abre: son sesenta tarjetas
+  // en pantalla y no tiene sentido pedir sesenta veces a la base algo que casi
+  // siempre no se va a mirar.
+  const [siguiendo, setSiguiendo] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState<string | null>(null);
 
   const cargar = useCallback(async () => {
@@ -173,6 +178,7 @@ export default function PedidosPage() {
             const esTienda = texto(p.payload, "tipo") === "tienda";
             const atendido = p.processed_at !== null;
             const viendoJson = abierto === p.id;
+            const viendoSeguimiento = siguiendo === p.id;
 
             return (
               <li key={p.id} className="tarjeta p-4" style={{ opacity: atendido ? 0.6 : 1 }}>
@@ -252,14 +258,26 @@ export default function PedidosPage() {
                   </p>
                 )}
 
-                <button
-                  className="mt-2 text-xs font-medium"
-                  type="button"
-                  onClick={() => setAbierto(viendoJson ? null : p.id)}
-                  style={{ color: "var(--marca)", minHeight: "2.75rem" }}
-                >
-                  {viendoJson ? "Ocultar lo que llegó" : "Ver lo que llegó"}
-                </button>
+                <div className="flex flex-wrap gap-4">
+                  <button
+                    className="mt-2 text-xs font-medium"
+                    type="button"
+                    onClick={() => setAbierto(viendoJson ? null : p.id)}
+                    style={{ color: "var(--marca)", minHeight: "2.75rem" }}
+                  >
+                    {viendoJson ? "Ocultar lo que llegó" : "Ver lo que llegó"}
+                  </button>
+                  {p.external_ref && (
+                    <button
+                      className="mt-2 text-xs font-medium"
+                      type="button"
+                      onClick={() => setSiguiendo(viendoSeguimiento ? null : p.id)}
+                      style={{ color: "var(--marca)", minHeight: "2.75rem" }}
+                    >
+                      {viendoSeguimiento ? "Ocultar por dónde va" : "Por dónde va"}
+                    </button>
+                  )}
+                </div>
 
                 {viendoJson && (
                   <pre
@@ -268,6 +286,15 @@ export default function PedidosPage() {
                   >
                     {JSON.stringify(p.payload, null, 2)}
                   </pre>
+                )}
+
+                {viendoSeguimiento && p.external_ref && (
+                  <div
+                    className="mt-2 rounded-lg p-3"
+                    style={{ background: "var(--fondo)", border: "1px solid var(--linea)" }}
+                  >
+                    <Seguimiento referencia={p.external_ref} />
+                  </div>
                 )}
 
                 <div className="mt-3 flex gap-2">

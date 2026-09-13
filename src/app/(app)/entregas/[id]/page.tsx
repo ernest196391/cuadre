@@ -9,6 +9,7 @@ import { formatearMonto, formatearUsdt, formatearFechaHora } from "@/lib/format"
 import { tasaLegible } from "@/lib/tasas";
 import { formatearUsd } from "@/lib/comisiones";
 import { guardarParaRepetir } from "@/lib/repetir";
+import Seguimiento from "@/components/Seguimiento";
 
 interface Entrega {
   id: string;
@@ -36,6 +37,9 @@ interface Entrega {
   voided_at: string | null;
   void_reason: string | null;
   created_at: string;
+  /** De qué pedido de la web salió, si salió de uno. */
+  inbound_order_id: string | null;
+  inbound_orders: { external_ref: string | null } | null;
   delivery_methods: { label: string; target_currency: string } | null;
 }
 
@@ -84,7 +88,7 @@ export default function EntregaPage({ params }: { params: { id: string } }) {
       const { data, error: err } = await sb
         .from("deliveries")
         .select(
-          "id, delivered_at, source_amount_received, source_currency, delivered_amount, delivered_currency, method_id, rate_applied, usdt_spent, usdt_rate_used, network_fee_usdt, usd_value, commission_applied, commission_currency, client_contact_id, destination_account_id, handled_by_contact_id, origin_contact_id, courier_contact_id, courier_fee, courier_fee_currency, notes, voided_at, void_reason, created_at, delivery_methods:method_id(label, target_currency)"
+          "id, delivered_at, source_amount_received, source_currency, delivered_amount, delivered_currency, method_id, rate_applied, usdt_spent, usdt_rate_used, network_fee_usdt, usd_value, commission_applied, commission_currency, client_contact_id, destination_account_id, handled_by_contact_id, origin_contact_id, courier_contact_id, courier_fee, courier_fee_currency, notes, voided_at, void_reason, created_at, inbound_order_id, delivery_methods:method_id(label, target_currency), inbound_orders:inbound_order_id(external_ref)"
         )
         .eq("id", params.id)
         .single();
@@ -261,6 +265,15 @@ export default function EntregaPage({ params }: { params: { id: string } }) {
           />
         )}
       </div>
+
+      {/* Solo si vino de un pedido de la web: el seguimiento es lo que ve el
+          cliente en su cuenta, y una entrega apuntada a mano aquí no tiene a
+          nadie esperándola del otro lado. */}
+      {entrega.inbound_orders?.external_ref && !anulada && (
+        <div className="tarjeta mb-4 p-4">
+          <Seguimiento referencia={entrega.inbound_orders.external_ref} />
+        </div>
+      )}
 
       {apuntes.length > 0 && (
         <>
