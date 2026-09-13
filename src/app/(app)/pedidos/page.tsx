@@ -298,7 +298,9 @@ export default function PedidosPage() {
                     className="mt-2 rounded-lg p-3"
                     style={{ background: "var(--fondo)", border: "1px solid var(--linea)" }}
                   >
-                    <Seguimiento referencia={p.external_ref} />
+                    {/* El flujo lo manda la base; esto solo es el respaldo
+                        para cuando el pedido todavía no tiene ningún salto. */}
+                    <Seguimiento referencia={p.external_ref} flujo={esTienda ? "tienda" : "remesa"} />
                   </div>
                 )}
 
