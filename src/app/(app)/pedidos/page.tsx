@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { useSesion } from "@/lib/sesion";
 import { formatearMonto, formatearFechaHora } from "@/lib/format";
-import { guardarParaRepetir } from "@/lib/repetir";
+import { guardarParaRepetir, guardarPedidoDeOrigen } from "@/lib/repetir";
 
 interface Pedido {
   id: string;
@@ -110,6 +110,10 @@ export default function PedidosPage() {
       clienteTelefono: texto(p.payload, "customer_phone", "telefono", "phone"),
       notas: `Pedido de la web${p.external_ref ? ` ${p.external_ref}` : ""}`,
     });
+    // El pedido viaja con los datos, para que la entrega que se guarde quede
+    // atada a él. Sin esto la cadena se corta aquí y el cliente deja de poder
+    // ver por dónde va lo suyo en cuanto Adonys la registra.
+    guardarPedidoDeOrigen(p.id);
     await marcar(p.id, true);
     router.push("/entregas/nueva");
   }

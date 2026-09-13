@@ -53,3 +53,31 @@ export function tomarParaRepetir(): EntregaRepetible | null {
     return null;
   }
 }
+
+/**
+ * De qué pedido de la web salió la entrega que se está registrando.
+ *
+ * Va aparte de `EntregaRepetible` porque no es un dato que se rellene en el
+ * formulario: es la costura entre lo que pidió el cliente y lo que se le
+ * entregó, y es lo que deja que él pueda seguir su envío.
+ */
+const CLAVE_PEDIDO = "cuadre.pedido_de_origen";
+
+export function guardarPedidoDeOrigen(id: string) {
+  try {
+    sessionStorage.setItem(CLAVE_PEDIDO, id);
+  } catch {
+    /* modo privado: la entrega se guarda igual, solo sin la costura */
+  }
+}
+
+/** Se lee una sola vez, como el resto del traspaso. */
+export function tomarPedidoDeOrigen(): string | null {
+  try {
+    const v = sessionStorage.getItem(CLAVE_PEDIDO);
+    if (v) sessionStorage.removeItem(CLAVE_PEDIDO);
+    return v;
+  } catch {
+    return null;
+  }
+}

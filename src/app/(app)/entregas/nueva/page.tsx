@@ -10,7 +10,7 @@ import { redondearTasa, tasaLegible } from "@/lib/tasas";
 import CampoMonto from "@/components/CampoMonto";
 import SelectorContacto, { type ContactoBreve } from "@/components/SelectorContacto";
 import { comisionDe, formatearUsd, porcentajeDe, valorEnUsd, type ReglaPersona } from "@/lib/comisiones";
-import { tomarParaRepetir } from "@/lib/repetir";
+import { tomarParaRepetir, tomarPedidoDeOrigen } from "@/lib/repetir";
 
 interface CuentaBreve {
   id: string;
@@ -150,7 +150,16 @@ export default function NuevaEntregaPage() {
    * ganancia.
    */
   const metodoImpuesto = useRef<string | null>(null);
+  /** De qué pedido de la web salió esta entrega, si salió de uno. Es lo que
+   *  deja que el cliente pueda seguir su envío después de registrarla. */
+  const pedidoDeOrigen = useRef<string | null>(null);
   useEffect(() => {
+    // Solo se asigna si hay algo. Se lee UNA vez y se borra, así que una
+    // segunda pasada de este efecto —React los ejecuta dos veces en
+    // desarrollo, y cualquier remontaje puede hacerlo— leería vacío y
+    // machacaría la referencia con nulo, dejando la entrega sin atar.
+    const origen = tomarPedidoDeOrigen();
+    if (origen) pedidoDeOrigen.current = origen;
     const r = tomarParaRepetir();
     if (!r) return;
     setVengoDe(r.origen ?? "anulada");
@@ -333,6 +342,7 @@ export default function NuevaEntregaPage() {
       usdt_rate_used: tasaUsdt?.rate ?? null,
       network_fee_usdt: parsearNumero(feeRed),
       client_contact_id: cliente?.id ?? null,
+      inbound_order_id: pedidoDeOrigen.current,
       destination_account_id: cuentaId || null,
       handled_by_contact_id: responsableId,
       origin_contact_id: origenId || null,

@@ -1,0 +1,25 @@
+-- SEGUIMIENTO DE ENVÍOS
+--
+-- Cuatro pasos, ni uno de relleno:
+--   pedido_recibido     lo pidió por la web, todavía no ha pagado
+--   recibido_en_guyana  Adonys tiene el dinero en la mano
+--   listo_en_cuba       Ernesto ya lo tiene de este lado
+--   entregado           la familia lo recibió
+--   cancelado           no salió
+--
+-- Se guardan los SALTOS, no un estado en una columna. Es lo que hace que el
+-- caso del USD «dando y dando» —donde los cuatro ocurren en el mismo minuto—
+-- sea normal y no una excepción que haya que programar. De paso quedan las
+-- horas de cada paso, que es lo que convierte un estado en un seguimiento y lo
+-- que permitirá medir las 24-48 horas cuando se prometan.
+--
+-- `cuando` usa clock_timestamp() y no now(): now() devuelve la hora en que
+-- empezó la transacción, así que dos saltos guardados en la misma petición
+-- quedarían a la misma hora exacta y se perdería el orden real.
+--
+-- La llave es `tracking_ref`, el identificador que nace en la web y viaja por
+-- toda la cadena. El seguimiento empieza ANTES de que exista una entrega
+-- registrada, así que no puede colgar del id de la entrega.
+--
+-- Aplicada al proyecto real (dkiiknsfbefpkrnmbzid) vía MCP. Registro
+-- versionado; toca los dos esquemas, así que vive en los dos repositorios.
