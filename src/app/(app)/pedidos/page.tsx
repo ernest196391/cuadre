@@ -162,17 +162,38 @@ export default function PedidosPage() {
             const monedaDestino = texto(p.payload, "currency_destination", "moneda_destino");
             const claveMetodo = texto(p.payload, "method_key");
             const metodo = metodos.find((m) => m.key === claveMetodo);
+            // Un pedido de la tienda —comida o energía— NO es una entrega de
+            // remesa: no tiene tasa ni USDT, y no hay nada que convertir. Se ve
+            // aquí para que todo lo que entra esté en un sitio, pero se atiende
+            // por WhatsApp, no con el formulario de entregas.
+            const esTienda = texto(p.payload, "tipo") === "tienda";
             const atendido = p.processed_at !== null;
             const viendoJson = abierto === p.id;
 
             return (
               <li key={p.id} className="tarjeta p-4" style={{ opacity: atendido ? 0.6 : 1 }}>
+                {esTienda && (
+                  <p
+                    className="mb-1 inline-flex rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold"
+                    style={{ background: "rgba(36,107,206,.10)", color: "#246BCE" }}
+                  >
+                    Tienda · {texto(p.payload, "categoria") ?? "pedido"}
+                  </p>
+                )}
                 <div className="mb-1 flex items-start justify-between gap-3">
                   <p className="min-w-0 truncate text-[0.9375rem] font-semibold">{nombre ?? "Sin nombre"}</p>
-                  {origen != null && (
-                    <p className="mono shrink-0 text-sm font-semibold">
-                      {formatearMonto(origen, monedaBase)} {monedaBase}
-                    </p>
+                  {esTienda ? (
+                    numero(p.payload, "amount_total_usd") != null && (
+                      <p className="mono shrink-0 text-sm font-semibold">
+                        {formatearMonto(numero(p.payload, "amount_total_usd")!, "USD")} USD
+                      </p>
+                    )
+                  ) : (
+                    origen != null && (
+                      <p className="mono shrink-0 text-sm font-semibold">
+                        {formatearMonto(origen, monedaBase)} {monedaBase}
+                      </p>
+                    )
                   )}
                 </div>
 
@@ -208,7 +229,20 @@ export default function PedidosPage() {
                   </p>
                 )}
 
-                {claveMetodo && !metodo && (
+                {esTienda && texto(p.payload, "recipient_name") && (
+                  <p className="mt-1 text-xs" style={{ color: "var(--texto-suave)" }}>
+                    Para {texto(p.payload, "recipient_name")}
+                    {texto(p.payload, "recipient_phone") ? ` · ${texto(p.payload, "recipient_phone")}` : ""}
+                    {texto(p.payload, "recipient_municipality")
+                      ? ` · ${texto(p.payload, "recipient_municipality")}`
+                      : ""}
+                    {texto(p.payload, "recipient_address")
+                      ? ` · ${texto(p.payload, "recipient_address")}`
+                      : ""}
+                  </p>
+                )}
+
+                {claveMetodo && !metodo && !esTienda && (
                   <p className="mt-1 text-xs" style={{ color: "#BB6B00" }}>
                     Ese método no existe aquí. Elígelo a mano al registrarla.
                   </p>
@@ -243,14 +277,25 @@ export default function PedidosPage() {
                       >
                         Descartar
                       </button>
-                      <button
-                        className="boton-primario flex-1"
-                        type="button"
-                        onClick={() => convertir(p)}
-                        disabled={ocupado === p.id}
-                      >
-                        Registrar entrega
-                      </button>
+                      {esTienda ? (
+                        <button
+                          className="boton-primario flex-1"
+                          type="button"
+                          onClick={() => marcar(p.id, true)}
+                          disabled={ocupado === p.id}
+                        >
+                          Marcar atendido
+                        </button>
+                      ) : (
+                        <button
+                          className="boton-primario flex-1"
+                          type="button"
+                          onClick={() => convertir(p)}
+                          disabled={ocupado === p.id}
+                        >
+                          Registrar entrega
+                        </button>
+                      )}
                     </>
                   ) : (
                     <button
